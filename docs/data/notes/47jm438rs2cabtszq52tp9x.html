@@ -1,0 +1,34 @@
+<h1 id="cd7-election-protection-queries">Cd7 Election Protection Queries<a aria-hidden="true" class="anchor-heading icon-link" href="#cd7-election-protection-queries"></a></h1>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+v<span class="token punctuation">.</span>dwid
+<span class="token punctuation">,</span> <span class="token keyword">COALESCE</span><span class="token punctuation">(</span>vp<span class="token punctuation">.</span>likely_cell_phone<span class="token punctuation">,</span> vp<span class="token punctuation">.</span>likely_land_phone<span class="token punctuation">)</span> <span class="token keyword">AS</span> phone_number
+<span class="token punctuation">,</span> INITCAP<span class="token punctuation">(</span>v<span class="token punctuation">.</span>firstname<span class="token punctuation">)</span> <span class="token keyword">AS</span> firstname
+<span class="token punctuation">,</span> INITCAP<span class="token punctuation">(</span>v<span class="token punctuation">.</span>lastname<span class="token punctuation">)</span> <span class="token keyword">AS</span> lastname
+<span class="token punctuation">,</span> INITCAP<span class="token punctuation">(</span>v<span class="token punctuation">.</span>regdeliveryaddrline<span class="token punctuation">)</span> <span class="token keyword">AS</span> address
+<span class="token punctuation">,</span> INITCAP<span class="token punctuation">(</span>v<span class="token punctuation">.</span>regaddrcity<span class="token punctuation">)</span> <span class="token keyword">AS</span> city
+<span class="token punctuation">,</span> v<span class="token punctuation">.</span>regaddrstate <span class="token keyword">AS</span> state
+<span class="token punctuation">,</span> v<span class="token punctuation">.</span>mailaddrzip <span class="token keyword">AS</span> zip
+<span class="token keyword">FROM</span><span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__person<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> v
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__phones<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vp
+  <span class="token keyword">ON</span> v<span class="token punctuation">.</span>DWID <span class="token operator">=</span> vp<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__district<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> d
+  <span class="token keyword">ON</span> v<span class="token punctuation">.</span>DWID <span class="token operator">=</span> d<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__models<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> m
+  <span class="token keyword">ON</span> d<span class="token punctuation">.</span>dwid <span class="token operator">=</span> m<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__vote_history<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vh
+  <span class="token keyword">ON</span> d<span class="token punctuation">.</span>dwid <span class="token operator">=</span> vh<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">WHERE</span> <span class="token keyword">COALESCE</span><span class="token punctuation">(</span>vp<span class="token punctuation">.</span>likely_cell_phone<span class="token punctuation">,</span> vp<span class="token punctuation">.</span>likely_land_phone<span class="token punctuation">)</span> <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+  <span class="token operator">AND</span> v<span class="token punctuation">.</span>regaddrstate <span class="token operator">=</span> <span class="token string">'AZ'</span>
+  <span class="token operator">AND</span> INITCAP<span class="token punctuation">(</span>d<span class="token punctuation">.</span>countyname<span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token string">'Pinal'</span>
+  <span class="token comment">-- voted in last two primaries</span>
+  <span class="token operator">AND</span> vh<span class="token punctuation">.</span>e2024pvm <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+  <span class="token operator">AND</span> vh<span class="token punctuation">.</span>e2023pvm <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+  <span class="token comment">-- no CD7 for pinal there are only 5 voters who fit this category in CD7</span>
+  <span class="token operator">AND</span> v<span class="token punctuation">.</span>partyaffiliation <span class="token operator">=</span> 'DEM
+
+</code></pre>

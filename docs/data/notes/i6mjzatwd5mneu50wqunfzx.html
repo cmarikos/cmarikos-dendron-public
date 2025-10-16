@@ -1,0 +1,58 @@
+<h1 id="contacts-by-vote-propensity">Contacts by Vote Propensity<a aria-hidden="true" class="anchor-heading icon-link" href="#contacts-by-vote-propensity"></a></h1>
+<h4 id="c3-voter-scores">c3 voter scores<a aria-hidden="true" class="anchor-heading icon-link" href="#c3-voter-scores"></a></h4>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.c3_2024_voterpropensity<span class="token punctuation">`</span></span> <span class="token keyword">AS</span><span class="token punctuation">(</span>
+<span class="token keyword">SELECT</span>
+vc<span class="token punctuation">.</span>VanID
+<span class="token punctuation">,</span> cw<span class="token punctuation">.</span>pctnum
+<span class="token punctuation">,</span> cw<span class="token punctuation">.</span>vb_vf_county_name
+<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_voterbase_voter_score
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.raze_ngpvan_data.TSM_OneAZ_ContactsContacts_VF<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vc
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.ResultsID<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ri
+   <span class="token keyword">ON</span> vc<span class="token punctuation">.</span>ResultID <span class="token operator">=</span> ri<span class="token punctuation">.</span>ResultID
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+  <span class="token keyword">ON</span> vc<span class="token punctuation">.</span>VanID <span class="token operator">=</span> vb<span class="token punctuation">.</span>vb_smartvan_id
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.targetsmart_pctnum_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+  <span class="token keyword">ON</span> vb<span class="token punctuation">.</span>vb_vf_national_precinct_code <span class="token operator">=</span> cw<span class="token punctuation">.</span>vb_vf_national_precinct_code
+
+
+<span class="token keyword">WHERE</span> vc<span class="token punctuation">.</span>ContactTypeID <span class="token operator">=</span> <span class="token number">2</span>
+  <span class="token operator">AND</span> vc<span class="token punctuation">.</span>DateCanvassed <span class="token operator">></span> <span class="token string">'2024-09-01'</span> 
+  <span class="token operator">AND</span> vc<span class="token punctuation">.</span>DateCanvassed <span class="token operator">&#x3C;</span> <span class="token string">'2025-01-01'</span>
+  <span class="token comment">--AND ri.ResultShortName = 'Canvassed'</span>
+  <span class="token operator">AND</span> vb<span class="token punctuation">.</span>vb_voterbase_voter_score <span class="token operator">is</span> <span class="token operator">not</span> <span class="token boolean">null</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<h4 id="vote-propensity">vote propensity<a aria-hidden="true" class="anchor-heading icon-link" href="#vote-propensity"></a></h4>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.c4_2024_voterpropensity<span class="token punctuation">`</span></span> <span class="token keyword">AS</span><span class="token punctuation">(</span>
+<span class="token keyword">SELECT</span>
+vc<span class="token punctuation">.</span>VanID
+<span class="token punctuation">,</span> cw<span class="token punctuation">.</span>pctnum
+<span class="token punctuation">,</span> cw<span class="token punctuation">.</span>county
+<span class="token punctuation">,</span> m<span class="token punctuation">.</span>catalistmodel_voteprop2024
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_ContactsContacts_VF<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vc
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.ResultsID<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ri
+   <span class="token keyword">ON</span> vc<span class="token punctuation">.</span>ResultID <span class="token operator">=</span> ri<span class="token punctuation">.</span>ResultID
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.raze_raza_dwid_to_van_id_crosswalk.dwid_vanid_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> dw
+  <span class="token keyword">ON</span> vc<span class="token punctuation">.</span>VanID <span class="token operator">=</span> dw<span class="token punctuation">.</span>VanID
+  
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__models<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> m
+  <span class="token keyword">ON</span> dw<span class="token punctuation">.</span>dwid <span class="token operator">=</span> m<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__district<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> d
+  <span class="token keyword">ON</span> dw<span class="token punctuation">.</span>dwid <span class="token operator">=</span> d<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.catalist_pctnum_crosswalk_native<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+  <span class="token keyword">ON</span> d<span class="token punctuation">.</span>uniqueprecinctcode <span class="token operator">=</span> cw<span class="token punctuation">.</span>uniqueprecinctcode
+  
+
+<span class="token keyword">WHERE</span> vc<span class="token punctuation">.</span>ContactTypeID <span class="token operator">=</span> <span class="token number">2</span>
+  <span class="token operator">AND</span> vc<span class="token punctuation">.</span>DateCanvassed <span class="token operator">></span> <span class="token string">'2024-01-01'</span> 
+  <span class="token operator">AND</span> vc<span class="token punctuation">.</span>DateCanvassed <span class="token operator">&#x3C;</span> <span class="token string">'2025-01-01'</span>
+  <span class="token comment">--AND ri.ResultShortName = 'Canvassed'</span>
+<span class="token punctuation">)</span>
+</code></pre>

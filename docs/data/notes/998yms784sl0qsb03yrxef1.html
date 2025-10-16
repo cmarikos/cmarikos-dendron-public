@@ -1,0 +1,112 @@
+<h1 id="cd-7">CD 7<a aria-hidden="true" class="anchor-heading icon-link" href="#cd-7"></a></h1>
+<h6 id="doing-targeted-re-reg-and-inactive-registration-prior-to-gotv">Doing targeted re-reg and inactive registration prior to GOTV<a aria-hidden="true" class="anchor-heading icon-link" href="#doing-targeted-re-reg-and-inactive-registration-prior-to-gotv"></a></h6>
+<p>Find bucks of inactive dems, people previously registered as dems, and high ideology scoring non-dems to get registered prior to the primary registration deadline</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">WITH</span> previous_dems <span class="token keyword">AS</span><span class="token punctuation">(</span>
+  <span class="token keyword">SELECT</span>
+  g<span class="token punctuation">.</span>PCTNUM
+  <span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>p<span class="token punctuation">.</span>DWID<span class="token punctuation">)</span> <span class="token keyword">as</span> previous_dems
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> g
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.catalist_pctnum_crosswalk_native<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+    <span class="token keyword">ON</span> g<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> cw<span class="token punctuation">.</span>pctnum
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__district<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> d
+    <span class="token keyword">ON</span> cw<span class="token punctuation">.</span>uniqueprecinctcode <span class="token operator">=</span> d<span class="token punctuation">.</span>uniqueprecinctcode
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__person<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p
+    <span class="token keyword">ON</span> d<span class="token punctuation">.</span>dwid <span class="token operator">=</span> p<span class="token punctuation">.</span>dwid
+
+  <span class="token keyword">WHERE</span> g<span class="token punctuation">.</span>CONGRESSIO <span class="token operator">=</span> <span class="token number">7</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span>lastpartyaffiliation <span class="token operator">=</span> <span class="token string">'DEM'</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span> partyaffiliation <span class="token operator">&#x3C;></span> <span class="token string">'DEM'</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span>deceased <span class="token operator">&#x3C;></span> <span class="token string">'Y'</span>
+
+  <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+<span class="token punctuation">,</span> inactive_dems <span class="token keyword">AS</span><span class="token punctuation">(</span>
+  <span class="token keyword">SELECT</span>
+  g<span class="token punctuation">.</span>PCTNUM
+  <span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>p<span class="token punctuation">.</span>DWID<span class="token punctuation">)</span> <span class="token keyword">as</span> inactive_dems
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> g
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.catalist_pctnum_crosswalk_native<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+    <span class="token keyword">ON</span> g<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> cw<span class="token punctuation">.</span>pctnum
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__district<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> d
+    <span class="token keyword">ON</span> cw<span class="token punctuation">.</span>uniqueprecinctcode <span class="token operator">=</span> d<span class="token punctuation">.</span>uniqueprecinctcode
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__person<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p
+    <span class="token keyword">ON</span> d<span class="token punctuation">.</span>dwid <span class="token operator">=</span> p<span class="token punctuation">.</span>dwid
+  
+  <span class="token keyword">WHERE</span> g<span class="token punctuation">.</span>CONGRESSIO <span class="token operator">=</span> <span class="token number">7</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span> partyaffiliation <span class="token operator">=</span> <span class="token string">'DEM'</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span>voterstatus <span class="token operator">=</span> <span class="token string">'inactive'</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span>deceased <span class="token operator">&#x3C;></span> <span class="token string">'Y'</span>
+
+  <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+<span class="token punctuation">,</span> highideo_nondem <span class="token keyword">AS</span><span class="token punctuation">(</span>
+  <span class="token keyword">SELECT</span>
+  g<span class="token punctuation">.</span>PCTNUM
+  <span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>p<span class="token punctuation">.</span>DWID<span class="token punctuation">)</span> <span class="token keyword">as</span> highideo_nondems
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> g
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.catalist_pctnum_crosswalk_native<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+    <span class="token keyword">ON</span> g<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> cw<span class="token punctuation">.</span>pctnum
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__district<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> d
+    <span class="token keyword">ON</span> cw<span class="token punctuation">.</span>uniqueprecinctcode <span class="token operator">=</span> d<span class="token punctuation">.</span>uniqueprecinctcode
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__person<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p
+    <span class="token keyword">ON</span> d<span class="token punctuation">.</span>dwid <span class="token operator">=</span> p<span class="token punctuation">.</span>dwid
+  
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__models<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> m
+    <span class="token keyword">ON</span> p<span class="token punctuation">.</span>dwid <span class="token operator">=</span> m<span class="token punctuation">.</span>dwid
+  
+  <span class="token keyword">WHERE</span> g<span class="token punctuation">.</span>CONGRESSIO <span class="token operator">=</span> <span class="token number">7</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span> partyaffiliation <span class="token operator">&#x3C;></span> <span class="token string">'REP'</span>
+    <span class="token operator">AND</span> m<span class="token punctuation">.</span>catalistmodel_ideology_plus <span class="token operator">>=</span> <span class="token number">80.0</span>
+    <span class="token operator">AND</span> p<span class="token punctuation">.</span>deceased <span class="token operator">&#x3C;></span> <span class="token string">'Y'</span>
+
+  <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span>
+<span class="token function">SUM</span><span class="token punctuation">(</span>pd<span class="token punctuation">.</span>previous_dems<span class="token punctuation">)</span> <span class="token keyword">AS</span> previous_dems
+<span class="token punctuation">,</span> <span class="token function">SUM</span><span class="token punctuation">(</span>id<span class="token punctuation">.</span>inactive_dems<span class="token punctuation">)</span> <span class="token keyword">AS</span> inactive_dems
+<span class="token punctuation">,</span> <span class="token function">SUM</span><span class="token punctuation">(</span>hd<span class="token punctuation">.</span>highideo_nondems<span class="token punctuation">)</span> <span class="token keyword">AS</span> highideo_nondems
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> g
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> previous_dems <span class="token keyword">AS</span> pd
+  <span class="token keyword">ON</span> g<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> pd<span class="token punctuation">.</span>PCTNUM
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> inactive_dems <span class="token keyword">AS</span> id
+  <span class="token keyword">ON</span> g<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> id<span class="token punctuation">.</span>PCTNUM
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> highideo_nondem <span class="token keyword">AS</span> hd
+  <span class="token keyword">ON</span> g<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> hd<span class="token punctuation">.</span>PCTNUM
+
+<span class="token keyword">WHERE</span> g<span class="token punctuation">.</span>CONGRESSIO <span class="token operator">=</span> <span class="token number">7</span>
+
+</code></pre>
+<h6 id="a-better-way-to-determine-previous-dems----table-provided-by-ashley-brennan">A better way to determine previous dems -- table provided by Ashley Brennan<a aria-hidden="true" class="anchor-heading icon-link" href="#a-better-way-to-determine-previous-dems----table-provided-by-ashley-brennan"></a></h6>
+<p>2020 registered dems who registered as another party for the 2024 election</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>nd<span class="token punctuation">.</span>dwid<span class="token punctuation">)</span> <span class="token keyword">AS</span> voters
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.dem2020notdem2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> nd
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__district<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> d
+  <span class="token keyword">ON</span> nd<span class="token punctuation">.</span>dwid <span class="token operator">=</span> d<span class="token punctuation">.</span>dwid
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.catalist_cleaned.cln_catalist__person<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p
+  <span class="token keyword">ON</span> nd<span class="token punctuation">.</span>dwid <span class="token operator">=</span> p<span class="token punctuation">.</span>DWID
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.catalist_pctnum_crosswalk_native<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+  <span class="token keyword">ON</span> d<span class="token punctuation">.</span>uniqueprecinctcode <span class="token operator">=</span> cw<span class="token punctuation">.</span>uniqueprecinctcode
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> g
+  <span class="token keyword">ON</span> cw<span class="token punctuation">.</span>pctnum <span class="token operator">=</span> g<span class="token punctuation">.</span>PCTNUM
+
+<span class="token keyword">WHERE</span> g<span class="token punctuation">.</span>CONGRESSIO <span class="token operator">=</span> <span class="token number">7</span>
+</code></pre>

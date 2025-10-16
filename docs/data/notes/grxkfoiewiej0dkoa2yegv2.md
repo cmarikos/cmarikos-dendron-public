@@ -1,0 +1,4 @@
+- [ ] [RAZE + RAZA Data Dictionary](https://docs.google.com/spreadsheets/d/1_4YpmRnj5sYzTH1FBIwCbu_spAHM9rxYYheKRi3lBUs/edit?gid=0#gid=0) - Chart and dictionary the structure of important queries
+- [ ] [County Needs Assessment](https://drive.google.com/drive/folders/1JS0TOeTp_mOSISNXmg8z5PBvdDnDXA6Y)- proactive research of what is going on in counties + what work we've already been involved in
+- [ ] [[az-state-house-results]]-  [Project files](https://docs.google.com/spreadsheets/d/1WIJV2JhNBl5NofWeVb8PTMeKK_5c3Eg-Prke3iJ8x_M/edit?gid=0#gid=0) - Ballotpedia sourced house candidates + districts to be joined with ElectionBase a historical voter files
+- [ ] [[internal-organizing-voter-file]] - Surfacing missing Voters (McKiney Grey page 38) - create

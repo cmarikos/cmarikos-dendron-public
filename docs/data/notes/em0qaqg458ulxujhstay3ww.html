@@ -1,0 +1,464 @@
+<h1 id="climate-equity-2025---people-data">Climate Equity 2025   People Data<a aria-hidden="true" class="anchor-heading icon-link" href="#climate-equity-2025---people-data"></a></h1>
+<h6 id="a-longer-conversation-about-membership-looms-on-the-horizon">A longer conversation about membership looms on the horizon<a aria-hidden="true" class="anchor-heading icon-link" href="#a-longer-conversation-about-membership-looms-on-the-horizon"></a></h6>
+<p> <a href="https://docs.google.com/spreadsheets/d/1jWbStsSmk9t9J5q1WTgTMLICRifn6wp8UnOGkJDgmwk/edit?gid=0#gid=0">Climate Equity People Data 2023</a></p>
+<ul>
+<li>the numbers in here are crazy and represent all of RAZA + RAZE outreach attempts, not even contacts
+Previously defined as:</li>
+<li>Base -  anyone we have ever attempted ever - this year we changed this to everyone we have had any conversation with (VR, campaign conversation, event attendance, organizing outreach)</li>
+<li>Membership - anyone who has come to an event, volunteered, raze leader/raza advocate, donor on actblue, basically any engagement</li>
+<li>Member leader - raze leader/raza advocate, unique volunteers, donors</li>
+</ul>
+<p>Fernando meeting: <a href="https://docs.google.com/document/d/1SKRjyaD6c1XUOracWwQVBOCOCGc2oBP10UBl-ktb3wI/edit?tab=t.0">https://docs.google.com/document/d/1SKRjyaD6c1XUOracWwQVBOCOCGc2oBP10UBl-ktb3wI/edit?tab=t.0</a></p>
+<p>Membership definition notes: <a href="https://docs.google.com/document/d/1Nv7EjtA7e49ihFrXEingGsf2KWvJ8TtwndHVdHlCLi4/edit?tab=t.0">https://docs.google.com/document/d/1Nv7EjtA7e49ihFrXEingGsf2KWvJ8TtwndHVdHlCLi4/edit?tab=t.0</a></p>
+<p>Climate Equity 2025 RFP <a href="https://docs.google.com/document/d/1rddMAtRmKmG6b5amvLCQ2_4C8q8J9xWttyrB03Yw1As/edit?tab=t.0">https://docs.google.com/document/d/1rddMAtRmKmG6b5amvLCQ2_4C8q8J9xWttyrB03Yw1As/edit?tab=t.0</a></p>
+<p>2025 people data for last year's 2024 c3 campaign cycle</p>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Member leaders</td><td>People who have formal roles, titles, and/or clear responsibilities. They are involved in decision making about the activities of the organization. These people are unpaid, not counting stipends or meals, etc.</td></tr><tr><td>Members</td><td>People who volunteer time, attend meetings, take action with the organization (e.g., make phone calls, door knocking/canvassing), or pay dues to the organization. These people are unpaid, not counting stipends or meals, etc.</td></tr><tr><td>Base/constituency</td><td>People who receive regular, direct communication from the organization via doorknocking, phone calls, text messages or online</td></tr><tr><td></td><td></td></tr></tbody></table></div>
+<h2 id="from-here-down-is-the-application">From here down is the application<a aria-hidden="true" class="anchor-heading icon-link" href="#from-here-down-is-the-application"></a></h2>
+<p><a href="https://docs.google.com/spreadsheets/d/1Q1iNkE03Xuajpv51c8hoJu0nWxO4r3Wt58eDBSsm-2s/edit?gid=0#gid=0">People Data 07212025 Climate Equity Fund</a></p>
+<h4 id="base">Base<a aria-hidden="true" class="anchor-heading icon-link" href="#base"></a></h4>
+<p> SmartVAN Arizona - RAZE Committee
+</p><blockquote>
+No note with name Screenshot 2025-07-25 at 3.58.14 PM.png found in cache during parsing.
+</blockquote><p></p>
+<p>Search saved in Climate Equity Folder as search titled - Climate Equity Base Full</p>
+<ul>
+<li></li>
+</ul>
+<h5 id="voter-demographics">Voter Demographics<a aria-hidden="true" class="anchor-heading icon-link" href="#voter-demographics"></a></h5>
+<ul>
+<li>Voter registered - 
+<pre><code>- 5,352 (4,002 match to Targetsmart VoterFile)
+</code></pre>
+-RACE + GENDER of Registered Voters</li>
+</ul>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+vb<span class="token punctuation">.</span>vb_voterbase_gender
+<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>ts_tsmr_race
+<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>vr<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span>
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.2024_program_summary.RAZE_VR_2024<span class="token punctuation">`</span></span> <span class="token keyword">as</span> vr
+
+<span class="token keyword">left</span> <span class="token keyword">join</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">as</span> vb
+  <span class="token keyword">on</span> vr<span class="token punctuation">.</span>voterbase_id <span class="token operator">=</span> vb<span class="token punctuation">.</span>voterbase_id
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span>
+</code></pre>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><td>vb_voterbase_gender</td><td>ts_tsmr_race</td><td>voter_registered</td></tr><tr><td></td><td></td><td>40</td></tr><tr><td>Female</td><td>AAPI</td><td>2</td></tr><tr><td>Female</td><td>Black</td><td>15</td></tr><tr><td>Female</td><td>Hispanic</td><td>1120</td></tr><tr><td>Female</td><td>Native American</td><td>5</td></tr><tr><td>Female</td><td>Uncoded</td><td>6</td></tr><tr><td>Female</td><td>White</td><td>448</td></tr><tr><td>Male</td><td>AAPI</td><td>6</td></tr><tr><td>Male</td><td>Black</td><td>15</td></tr><tr><td>Male</td><td>Hispanic</td><td>1183</td></tr><tr><td>Male</td><td>Native American</td><td>6</td></tr><tr><td>Male</td><td>Uncoded</td><td>3</td></tr><tr><td>Male</td><td>White</td><td>457</td></tr><tr><td>Unknown</td><td>AAPI</td><td>7</td></tr><tr><td>Unknown</td><td>Black</td><td>45</td></tr><tr><td>Unknown</td><td>Hispanic</td><td>468</td></tr><tr><td>Unknown</td><td>Native American</td><td>2</td></tr><tr><td>Unknown</td><td>Uncoded</td><td>5</td></tr><tr><td>Unknown</td><td>White</td><td>169</td></tr></tbody></table></div>
+<h4 id="base-ej">Base EJ<a aria-hidden="true" class="anchor-heading icon-link" href="#base-ej"></a></h4>
+<p></p><blockquote>
+No note with name Screenshot 2025-07-25 at 3.58.14 PM.png found in cache during parsing.
+</blockquote><p></p>
+<p>Plus
+</p><blockquote>
+No note with name Screenshot 2025-07-31 at 8.33.23 AM.png found in cache during parsing.
+</blockquote><p></p>
+<p>The list is 20 people :/ and is saved in the Climate Equity folder with Climate Equity Base 2024 EJ IDs</p>
+<h4 id="members">Members<a aria-hidden="true" class="anchor-heading icon-link" href="#members"></a></h4>
+<p>Volunteers and event attendees between 06/01/2024 and 11/30/2024 logged in EA Movement Cooperative + Education roster</p>
+<h6 id="1-ran-sql-query---saved-in-organizing-dashboard">1. Ran SQL query - saved in <a href="https://github.com/cmarikos/organizing-dashboard/blob/main/unique_attendee_volunteers_legacy.sql">organizing-dashboard</a><a aria-hidden="true" class="anchor-heading icon-link" href="#1-ran-sql-query---saved-in-organizing-dashboard"></a></h6>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">WITH</span> main_query <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">WITH</span> unique_attendees <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+      vanid<span class="token punctuation">,</span>
+      <span class="token string">'Volunteer'</span> <span class="token keyword">AS</span> role
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> 
+    <span class="token keyword">WHERE</span> start_date <span class="token operator">></span> <span class="token string">'2024-06-01'</span>
+      <span class="token operator">AND</span> start_date <span class="token operator">&#x3C;</span> <span class="token string">'2024-11-30'</span>
+      <span class="token operator">AND</span> <span class="token keyword">status</span> <span class="token operator">=</span> <span class="token string">'Completed'</span>
+      <span class="token operator">AND</span> role <span class="token operator">=</span> <span class="token string">'Volunteer'</span>
+      <span class="token operator">AND</span> current_status <span class="token operator">=</span> <span class="token number">1</span>
+  <span class="token punctuation">)</span>
+
+  <span class="token keyword">SELECT</span> 
+    c<span class="token punctuation">.</span>first_name <span class="token operator">||</span> <span class="token string">" "</span> <span class="token operator">||</span> c<span class="token punctuation">.</span>last_name <span class="token keyword">AS</span> full_name<span class="token punctuation">,</span>
+    e<span class="token punctuation">.</span>vanid<span class="token punctuation">,</span>
+    a<span class="token punctuation">.</span>role<span class="token punctuation">,</span>
+    STRING_AGG<span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> e<span class="token punctuation">.</span>event_name<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> agg_events<span class="token punctuation">,</span>
+    ARRAY_LENGTH<span class="token punctuation">(</span>ARRAY_AGG<span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> e<span class="token punctuation">.</span>event_name<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> event_count<span class="token punctuation">,</span>
+
+    <span class="token comment">-- NEW: how many DISTINCT events where this person was a Volunteer &#x26; Completed &#x26; current_status=1</span>
+    <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> <span class="token keyword">IF</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span>role <span class="token operator">=</span> <span class="token string">'Volunteer'</span>
+                      <span class="token operator">AND</span> e<span class="token punctuation">.</span><span class="token keyword">status</span> <span class="token operator">=</span> <span class="token string">'Completed'</span>
+                      <span class="token operator">AND</span> e<span class="token punctuation">.</span>current_status <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span>
+                      e<span class="token punctuation">.</span>event_name<span class="token punctuation">,</span> <span class="token boolean">NULL</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> volunteer_event_count
+
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> e
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> unique_attendees <span class="token keyword">AS</span> a
+    <span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> a<span class="token punctuation">.</span>vanid
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__contacts<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> c
+    <span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> c<span class="token punctuation">.</span>vanid
+  <span class="token keyword">WHERE</span> e<span class="token punctuation">.</span>start_date <span class="token operator">></span> <span class="token string">'2024-06-01'</span>
+    <span class="token operator">AND</span> e<span class="token punctuation">.</span>start_date <span class="token operator">&#x3C;</span> <span class="token string">'2024-11-30'</span>
+    <span class="token operator">AND</span> <span class="token keyword">status</span> <span class="token operator">=</span> <span class="token string">'Completed'</span>
+  <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span> 
+  CAST<span class="token punctuation">(</span>c<span class="token punctuation">.</span>utc_datecreated <span class="token keyword">AS</span> <span class="token keyword">DATE</span><span class="token punctuation">)</span> date_of_first_engagement<span class="token punctuation">,</span>
+  m<span class="token punctuation">.</span>full_name<span class="token punctuation">,</span>
+  m<span class="token punctuation">.</span>vanid<span class="token punctuation">,</span>
+  <span class="token keyword">CASE</span> <span class="token keyword">WHEN</span> m<span class="token punctuation">.</span>role <span class="token operator">IS</span> <span class="token boolean">NULL</span> <span class="token keyword">THEN</span> <span class="token string">""</span> <span class="token keyword">ELSE</span> m<span class="token punctuation">.</span>role <span class="token keyword">END</span> <span class="token keyword">AS</span> is_volunteer<span class="token punctuation">,</span>
+  m<span class="token punctuation">.</span>agg_events<span class="token punctuation">,</span>
+  m<span class="token punctuation">.</span>event_count<span class="token punctuation">,</span>
+  IFNULL<span class="token punctuation">(</span>m<span class="token punctuation">.</span>volunteer_event_count<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> volunteer_event_count<span class="token punctuation">,</span>   <span class="token comment">-- ← just return it</span>
+  <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> STRING_AGG<span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> oe<span class="token punctuation">.</span>organizer<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span>
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_user_events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> oe
+    <span class="token keyword">WHERE</span> oe<span class="token punctuation">.</span>event_name <span class="token operator">IN</span> UNNEST<span class="token punctuation">(</span>SPLIT<span class="token punctuation">(</span>m<span class="token punctuation">.</span>agg_events<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token punctuation">)</span> <span class="token keyword">AS</span> agg_organizers
+<span class="token keyword">FROM</span> main_query <span class="token keyword">AS</span> m
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__contacts<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> c
+  <span class="token keyword">ON</span> m<span class="token punctuation">.</span>vanid <span class="token operator">=</span> c<span class="token punctuation">.</span>vanid
+
+</code></pre>
+<p>Create sheet <a href="https://docs.google.com/spreadsheets/d/1DlwEJJtWSzHm8ZH1BM-HEMXQZV3NJJJoxg43hMq4W6g/edit?gid=214969885#gid=214969885">demographics-climate action-2024</a></p>
+<ul>
+<li>Insert race and gender drop downs for organizing team to manually fill out</li>
+<li>Made a pivot table to get gender and race counts</li>
+</ul>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th></tr></thead><tbody><tr><td>volunteers</td></tr><tr><td>18</td></tr></tbody></table></div>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><td>race</td><td></td><td>Man</td><td>Transgender/Gender Nonconforming/Genderqueer</td><td>Woman</td><td><strong>Grand Total</strong></td></tr><tr><td></td><td>21</td><td>1</td><td></td><td>2</td><td><strong>24</strong></td></tr><tr><td>Asian American / Pacific Islander</td><td></td><td>1</td><td></td><td></td><td><strong>1</strong></td></tr><tr><td>Black</td><td></td><td>1</td><td></td><td></td><td><strong>1</strong></td></tr><tr><td>Latinx</td><td></td><td>11</td><td></td><td>25</td><td><strong>36</strong></td></tr><tr><td>Multiracial</td><td></td><td></td><td></td><td>2</td><td><strong>2</strong></td></tr><tr><td>Native American</td><td></td><td></td><td></td><td>1</td><td><strong>1</strong></td></tr><tr><td>White</td><td></td><td>9</td><td>2</td><td>21</td><td><strong>32</strong></td></tr><tr><td><strong>Grand Total</strong></td><td><strong>21</strong></td><td><strong>23</strong></td><td><strong>2</strong></td><td><strong>51</strong></td><td><strong>97</strong></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div>
+<ul>
+<li></li>
+</ul>
+<hr>
+<p><a href="https://docs.google.com/spreadsheets/d/127WCJ7rpOJzxfYClv5zFb4khy5D-MJWN0GTzVzYXzx4/edit?gid=0#gid=0">Full Education Roster</a></p>
+<ul>
+<li>include grads from Pinal cohorts 5,6,7,8 (42) &#x26; Yuma 6,7,8,9 (85) = 127</li>
+</ul>
+<p>={'Full Roster'!A35:X76; 'Full Roster'!A149:X244; 'Full Roster'!A291:X307}</p>
+<p>Education Full roster filter to anyone who has a program in 2024 </p>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><td>race</td><td></td><td>Female</td><td>Male</td><td>Grand Total</td></tr><tr><td></td><td>0</td><td></td><td></td><td>0</td></tr><tr><td>Black</td><td></td><td>2</td><td>4</td><td>6</td></tr><tr><td>Hispanic</td><td></td><td>75</td><td>55</td><td>130</td></tr><tr><td>Multiracial</td><td></td><td>1</td><td></td><td>1</td></tr><tr><td>Multiracial</td><td></td><td>1</td><td></td><td>1</td></tr><tr><td>Native American</td><td></td><td>1</td><td>1</td><td>2</td></tr><tr><td>Native American</td><td></td><td>2</td><td>2</td><td>4</td></tr><tr><td>White</td><td></td><td>6</td><td>5</td><td>11</td></tr><tr><td>Grand Total</td><td>0</td><td>88</td><td>67</td><td>155</td></tr></tbody></table></div>

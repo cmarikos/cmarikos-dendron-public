@@ -1,0 +1,59 @@
+<h1 id="open-elections">Open Elections<a aria-hidden="true" class="anchor-heading icon-link" href="#open-elections"></a></h1>
+<p>Going to work with <a href="https://github.com/openelections/openelections-core">Open Elections</a> for the <a title="Private" href="https://wiki.dendron.so/notes/hfyvYGJZQiUwQaaxQO27q.html" target="_blank" class="private">2024-c4-campaign-ids (Private)</a> file join Rich needs. Currently I don't have election results in a format I can use my <a href="/notes/962gt0vi36sabiohic4lccu">Az Precinct Name Conversion Script</a> on. Without a unified precinct code files can't be joined for Rich in QGIS.</p>
+<h5 id="install-pipx-snf-pipenv">Install pipx snf pipenv<a aria-hidden="true" class="anchor-heading icon-link" href="#install-pipx-snf-pipenv"></a></h5>
+<p>Run in the terminal
+%%Aside: I'd like to email Max Howell a kiss on the mouth for every time homebrew made my life easier%%</p>
+<pre class="language-zsh"><code class="language-zsh">	cmarikos@MacBookAir ~ % brew install pipx
+</code></pre>
+<p>Then run</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % pipx install pipenv
+</code></pre>
+<p>Then</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % pipx ensure path
+</code></pre>
+<p>And</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % source ~/.zshrc
+</code></pre>
+<p>And finally</p>
+<pre class="language-zsh"><code class="language-zsh">	cmarikos@MacBookAir ~ % pipenv --version
+**pipenv**, version 2024.4.1
+</code></pre>
+<p>Yay!</p>
+<h5 id="make-a-virtual-environment-then-fork-the-open-elections-repo">Make a virtual environment then fork the Open Elections repo<a aria-hidden="true" class="anchor-heading icon-link" href="#make-a-virtual-environment-then-fork-the-open-elections-repo"></a></h5>
+<p>Run</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % pipenv install --dev
+</code></pre>
+<p>Then</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % pipenv shell
+</code></pre>
+<h5 id="fork-the-repo">Fork the repo<a aria-hidden="true" class="anchor-heading icon-link" href="#fork-the-repo"></a></h5>
+<p>Gonna set up osxkeychain first</p>
+<pre class="language-zsh"><code class="language-zsh">(cmarikos) cmarikos@MacBookAir ~ % git config --global credential.helper osxkeychain
+</code></pre>
+<p>Verify that is worked</p>
+<pre class="language-zsh"><code class="language-zsh">(cmarikos) cmarikos@MacBookAir ~ % git config --global credential.helper
+
+osxkeychain
+</code></pre>
+<p>Yay!</p>
+<pre class="language-zsh"><code class="language-zsh">(cmarikos) cmarikos@MacBookAir ~ % git clone https://github.com/cmarikos/openelections-core.git
+
+</code></pre>
+<p>Generate a PAT then enter</p>
+<pre class="language-zsh"><code class="language-zsh">(cmarikos) cmarikos@MacBookAir ~ % git clone https://github.com/cmarikos/openelections-core.git
+
+Cloning into 'openelections-core'...
+
+Username for 'https://github.com': cmarikos
+
+Password for 'https://cmarikos@github.com':
+</code></pre>
+<p>Something went wrong</p>
+<pre class="language-zsh"><code class="language-zsh">remote: Repository not found.
+
+fatal: repository 'https://github.com/cmarikos/openelections-core.git/' not found
+</code></pre>
+<p>So this worked? Maybe</p>
+<pre class="language-zsh"><code class="language-zsh">(cmarikos) cmarikos@MacBookAir ~ % git clone https://github.com/openelections/openelections-core
+</code></pre>
+<p>I'm stupid, like genuinely dumb. I didn't click 'Fork Repo' so obviously the '<a href="https://github.com/cmarikos/openelections-core.git/&#x27;">https://github.com/cmarikos/openelections-core.git/'</a> didn't work. All good now. I'm learning. Maybe I shouldn't be forking repos if I don't know how to fork repos, but gotta start somewhere  I guess.</p>

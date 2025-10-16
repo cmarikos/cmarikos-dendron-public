@@ -1,0 +1,97 @@
+<h1 id="az-precinct-name-conversion-script">Az Precinct Name Conversion Script<a aria-hidden="true" class="anchor-heading icon-link" href="#az-precinct-name-conversion-script"></a></h1>
+<p>This is the script I started with. This will work if unique precinct codes.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd  
+
+precincts <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'/RAZA_c4_2024_Door_Attempts - bq-results-20250107-174015-1736271644789.csv'</span><span class="token punctuation">)</span>
+ 
+
+<span class="token comment"># County to prefix dictionary</span>
+county_codes <span class="token operator">=</span> <span class="token punctuation">{</span>
+	<span class="token string">'YUMA'</span><span class="token punctuation">:</span><span class="token string">'YU'</span>
+	<span class="token punctuation">,</span><span class="token string">'MARICOPA'</span><span class="token punctuation">:</span><span class="token string">'MC'</span>
+	<span class="token punctuation">,</span><span class="token string">'SANTA CRUZ'</span><span class="token punctuation">:</span><span class="token string">'SC'</span>
+	<span class="token punctuation">,</span><span class="token string">'GILA'</span><span class="token punctuation">:</span><span class="token string">'GI'</span>
+	<span class="token punctuation">,</span><span class="token string">'PIMA'</span><span class="token punctuation">:</span><span class="token string">'PM'</span>
+	<span class="token punctuation">,</span><span class="token string">'PINAL'</span><span class="token punctuation">:</span><span class="token string">'PN'</span>
+	<span class="token punctuation">,</span><span class="token string">'APACHE'</span><span class="token punctuation">:</span><span class="token string">'AP'</span>
+	<span class="token punctuation">,</span><span class="token string">'GRAHAM'</span><span class="token punctuation">:</span><span class="token string">'GM'</span>
+	<span class="token punctuation">,</span><span class="token string">'LA PAZ'</span><span class="token punctuation">:</span><span class="token string">'LP'</span>
+	<span class="token punctuation">,</span><span class="token string">'MOHAVE'</span><span class="token punctuation">:</span><span class="token string">'MO'</span>
+	<span class="token punctuation">,</span><span class="token string">'NAVAJO'</span><span class="token punctuation">:</span><span class="token string">'NA'</span>
+	<span class="token punctuation">,</span><span class="token string">'COCHISE'</span><span class="token punctuation">:</span><span class="token string">'CH'</span>
+	<span class="token punctuation">,</span><span class="token string">'YAVAPAI'</span><span class="token punctuation">:</span><span class="token string">'YA'</span>
+	<span class="token punctuation">,</span><span class="token string">'COCONINO'</span><span class="token punctuation">:</span><span class="token string">'CN'</span>
+	<span class="token punctuation">,</span><span class="token string">'GREENLEE'</span><span class="token punctuation">:</span><span class="token string">'GN'</span>
+<span class="token punctuation">}</span>
+
+  
+
+<span class="token comment"># Function to extract pctnum based on county and precinct code</span>
+<span class="token keyword">def</span> <span class="token function">extract_pctnum</span><span class="token punctuation">(</span>countyname<span class="token punctuation">,</span> precinctcode<span class="token punctuation">,</span> county_codes<span class="token punctuation">)</span><span class="token punctuation">:</span>  
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		precinct_int <span class="token operator">=</span> <span class="token builtin">int</span><span class="token punctuation">(</span><span class="token builtin">float</span><span class="token punctuation">(</span>precinctcode<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment"># Handles cases like 25.0 → 25</span>
+	<span class="token keyword">except</span> ValueError<span class="token punctuation">:</span>
+		<span class="token keyword">return</span> <span class="token string">'ERROR'</span>
+  
+
+<span class="token comment"># Ensure precinctcode is a string and zero-pad to 4 digits</span>
+num_part <span class="token operator">=</span> <span class="token builtin">str</span><span class="token punctuation">(</span>precinct_int<span class="token punctuation">)</span><span class="token punctuation">.</span>zfill<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span>
+ 
+
+<span class="token comment"># Get the county code from the dictionary</span>
+county_codes <span class="token operator">=</span> county_codes<span class="token punctuation">.</span>get<span class="token punctuation">(</span>countyname<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> county_codes<span class="token punctuation">:</span>
+	<span class="token keyword">return</span> county_codes <span class="token operator">+</span> num_part <span class="token comment"># Concatenate county code and zero-padded precinct code</span>
+	<span class="token keyword">else</span><span class="token punctuation">:</span>
+		<span class="token keyword">return</span> <span class="token string">'ERROR'</span>
+ 
+
+<span class="token comment">#Apply to dataframe, swap out row['__'] with column names</span>
+precincts<span class="token punctuation">[</span><span class="token string">'pctnum'</span><span class="token punctuation">]</span> <span class="token operator">=</span> precincts<span class="token punctuation">.</span><span class="token builtin">apply</span><span class="token punctuation">(</span><span class="token keyword">lambda</span> row<span class="token punctuation">:</span> extract_pctnum<span class="token punctuation">(</span>row<span class="token punctuation">[</span><span class="token string">'countyname'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> row<span class="token punctuation">[</span><span class="token string">'precinctcode'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> county_codes<span class="token punctuation">)</span><span class="token punctuation">,</span> axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+
+  
+<span class="token comment">#Export the new dataframe to csv</span>
+precincts<span class="token punctuation">.</span>to_csv<span class="token punctuation">(</span><span class="token string">'/content/modified_c4precincts.csv'</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+<span class="token comment">#Display head to check result</span>
+precincts<span class="token punctuation">.</span>head<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<p>If you have a precinct name in which you need to extract numbers you can add in the following to chop the numbers off</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> re
+
+<span class="token keyword">def</span> <span class="token function">extract_pctnum</span><span class="token punctuation">(</span>county_name<span class="token punctuation">,</span> precinctcode<span class="token punctuation">,</span> county_codes<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># Some precincts in Maricopa in my file are just called "UNCODED"</span>
+    <span class="token keyword">if</span> <span class="token string">"UNCODED"</span> <span class="token keyword">in</span> precinctcode<span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token string">"ERROR"</span>
+
+    <span class="token comment"># Extract the last three digits</span>
+    <span class="token keyword">match</span> <span class="token operator">=</span> re<span class="token punctuation">.</span>search<span class="token punctuation">(</span><span class="token string">r'(\d{1,3})$'</span><span class="token punctuation">,</span> precinctcode<span class="token punctuation">)</span>  <span class="token comment"># Looks for up to 3 digits at the end</span>
+
+    <span class="token keyword">if</span> <span class="token keyword">not</span> <span class="token keyword">match</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Invalid precinct code format: </span><span class="token interpolation"><span class="token punctuation">{</span>precinctcode<span class="token punctuation">}</span></span><span class="token string"> (County: </span><span class="token interpolation"><span class="token punctuation">{</span>county_name<span class="token punctuation">}</span></span><span class="token string">)"</span></span><span class="token punctuation">)</span>  <span class="token comment"># Debugging</span>
+        <span class="token keyword">return</span> <span class="token string">'ERROR'</span>
+
+    num_part <span class="token operator">=</span> <span class="token keyword">match</span><span class="token punctuation">.</span>group<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span>zfill<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span>  <span class="token comment"># Ensure it's always 4 digits</span>
+
+    <span class="token comment"># Get the county prefix from the dictionary</span>
+    county_code <span class="token operator">=</span> county_codes<span class="token punctuation">.</span>get<span class="token punctuation">(</span>county_name<span class="token punctuation">)</span>
+
+    <span class="token keyword">if</span> county_code<span class="token punctuation">:</span>
+        <span class="token keyword">return</span> county_code <span class="token operator">+</span> num_part  <span class="token comment"># Concatenate county prefix + zero-padded precinct code</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"County not found: </span><span class="token interpolation"><span class="token punctuation">{</span>county_name<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>  <span class="token comment"># Debugging</span>
+        <span class="token keyword">return</span> <span class="token string">'ERROR'</span>
+
+precincts<span class="token punctuation">[</span><span class="token string">'pctnum'</span><span class="token punctuation">]</span> <span class="token operator">=</span> precincts<span class="token punctuation">.</span><span class="token builtin">apply</span><span class="token punctuation">(</span>
+    <span class="token keyword">lambda</span> row<span class="token punctuation">:</span> extract_pctnum<span class="token punctuation">(</span>row<span class="token punctuation">[</span><span class="token string">'county_name'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> row<span class="token punctuation">[</span><span class="token string">'svi_registration_national_precinct_code'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> county_codes<span class="token punctuation">)</span><span class="token punctuation">,</span>
+    axis<span class="token operator">=</span><span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>precincts<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'county_name'</span><span class="token punctuation">,</span> <span class="token string">'svi_registration_national_precinct_code'</span><span class="token punctuation">,</span> <span class="token string">'pctnum'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">.</span>head<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</code></pre>
+<hr>
+<strong>Backlinks</strong>
+<ul>
+<li><a href="/notes/ys39r8z1ciwvkf3wjkncj78">Open Elections</a></li>
+</ul>

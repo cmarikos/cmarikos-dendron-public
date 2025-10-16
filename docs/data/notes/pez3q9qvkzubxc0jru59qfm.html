@@ -1,0 +1,97 @@
+<h1 id="under-voting-statewide-c4">Under Voting (Statewide) c4<a aria-hidden="true" class="anchor-heading icon-link" href="#under-voting-statewide-c4"></a></h1>
+<h3 id="step-1-clean-cvap-data">Step 1: clean CVAP data<a aria-hidden="true" class="anchor-heading icon-link" href="#step-1-clean-cvap-data"></a></h3>
+<p>Begin by using CVAP ACS data to get LD
+</p><blockquote>
+No note with name CVAP_2019-2023_ACS_csv_files.zip found in cache during parsing.
+</blockquote><p></p>
+<p>Using the SLDUC file for LD since UC and LC are the same in AZ</p><blockquote>
+No note with name SLDUC.csv found in cache during parsing.
+</blockquote><p></p>
+<p>Inspect the dataframe in python</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+
+cvap_slduc <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'/content/SLDUC.csv'</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>cvap_slduc<span class="token punctuation">.</span>head<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+</code></pre>
+<p></p><blockquote>
+No note with name az_cvap_slduc.csv found in cache during parsing.
+</blockquote><p></p>
+<p>Sample data:</p>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>geoname</th><th>lntitle</th><th>geoid</th><th>lnnumber</th><th>tot_est</th><th>tot_moe</th><th>adu_est</th><th>adu_moe</th><th>cit_est</th><th>cit_moe</th><th>cvap_est</th><th>cvap_moe</th></tr></thead><tbody><tr><td>State Senate District 1 (2022), Alabama</td><td>Not Hispanic or Latino</td><td>610U800US01001</td><td>2</td><td>142975</td><td>1826</td><td>115170</td><td>1407</td><td>142130</td><td>1878</td><td>114330</td><td>1459</td></tr></tbody></table></div>
+<p>Base query for joining CVAP to geometry file</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">WITH</span> a <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span>
+		ld_shortname
+		<span class="token punctuation">,</span> lntitle
+		<span class="token punctuation">,</span> adu_est
+		<span class="token punctuation">,</span> cit_est
+		<span class="token punctuation">,</span> cvap_est
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.az_cvap_slduc_2022<span class="token punctuation">`</span></span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span>
+	ld<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span>
+	<span class="token punctuation">,</span> a<span class="token punctuation">.</span>ld_shortname
+	<span class="token punctuation">,</span> a<span class="token punctuation">.</span>lntitle
+	<span class="token punctuation">,</span> a<span class="token punctuation">.</span>adu_est
+	<span class="token punctuation">,</span> a<span class="token punctuation">.</span>cit_est
+	<span class="token punctuation">,</span> a<span class="token punctuation">.</span>cvap_est
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_legdistricts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ld  
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> a
+	<span class="token keyword">ON</span> ld<span class="token punctuation">.</span>SHORTNAME <span class="token operator">=</span> a<span class="token punctuation">.</span>ld_shortname
+</code></pre>
+<p>Modeled race counts in Targetsmart </p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+	tc<span class="token punctuation">.</span>ld_shortname
+	<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_voterbase_race
+	<span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span>
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.tsmart_ld_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> tc
+	<span class="token keyword">ON</span> CAST<span class="token punctuation">(</span>vb<span class="token punctuation">.</span>vb_tsmart_hd <span class="token keyword">AS</span> INT64<span class="token punctuation">)</span> <span class="token operator">=</span> tc<span class="token punctuation">.</span>vb_tsmart_hd
+
+<span class="token keyword">WHERE</span> vb<span class="token punctuation">.</span>vb_tsmart_state <span class="token operator">=</span> <span class="token string">'AZ'</span>
+	<span class="token operator">AND</span> tc<span class="token punctuation">.</span>ld_shortname <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span>
+</code></pre>
+<p>-- current issue: CVAP race categories do not match voterbase race modeled categories. See mismatch mapped <a href="https://docs.google.com/spreadsheets/d/1b0cPPyT3EGFvbTBDDb1cE3V1jL4Mr_BO_yoR7al9aOc/edit?usp=sharing">here</a>.</p>
+<p>Age ACS age buckets by target LD + precinct age maps</p>

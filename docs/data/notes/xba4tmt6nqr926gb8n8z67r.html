@@ -1,0 +1,179 @@
+<h1 id="registered-voters-by-geography">Registered Voters by Geography<a aria-hidden="true" class="anchor-heading icon-link" href="#registered-voters-by-geography"></a></h1>
+<p>Maps registered voters by precinct, county, ld, and cd by party</p>
+<pre class="language-sql"><code class="language-sql">  
+
+<span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.registered_voters_by_pctnum_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+	<span class="token keyword">WITH</span> a <span class="token keyword">AS</span><span class="token punctuation">(</span>
+		<span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+			cw<span class="token punctuation">.</span>pctnum
+			<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_vf_party <span class="token keyword">as</span> party
+			<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> registered_voters
+		
+		<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+		
+		<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.targetsmart_pctnum_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">as</span> cw
+			<span class="token keyword">ON</span> vb<span class="token punctuation">.</span>vb_vf_precinct_name <span class="token operator">=</span> cw<span class="token punctuation">.</span>vb_vf_precinct_name
+		
+		<span class="token keyword">WHERE</span> vb<span class="token punctuation">.</span>vb_tsmart_state <span class="token operator">=</span> <span class="token string">'AZ'</span>
+		
+		<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span>
+		<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+	<span class="token punctuation">)</span>
+	
+	<span class="token keyword">SELECT</span>
+		pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span>
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>COUNTY
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>PRECINCTNA
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>LEGISLATIV
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>CONGRESSIO
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>party
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>registered_voters
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pg
+	
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> a
+		<span class="token keyword">ON</span> pg<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> a<span class="token punctuation">.</span>pctnum
+<span class="token punctuation">)</span>
+</code></pre>
+<p>Age buckets place holder</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token keyword">distinct</span>
+
+<span class="token keyword">CASE</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">18</span> <span class="token operator">AND</span> <span class="token number">24</span> <span class="token keyword">THEN</span> <span class="token string">'18-24'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">25</span> <span class="token operator">AND</span> <span class="token number">34</span> <span class="token keyword">THEN</span> <span class="token string">'25-34'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">25</span> <span class="token operator">AND</span> <span class="token number">34</span> <span class="token keyword">THEN</span> <span class="token string">'25-34'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">35</span> <span class="token operator">AND</span> <span class="token number">44</span> <span class="token keyword">THEN</span> <span class="token string">'35-44'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">45</span> <span class="token operator">AND</span> <span class="token number">54</span> <span class="token keyword">THEN</span> <span class="token string">'45-54'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">55</span> <span class="token operator">AND</span> <span class="token number">64</span> <span class="token keyword">THEN</span> <span class="token string">'55-64'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">></span> <span class="token number">65</span> <span class="token keyword">THEN</span> <span class="token string">'65+'</span>
+
+<span class="token keyword">ELSE</span> <span class="token string">'age not specified'</span>
+
+<span class="token keyword">END</span> <span class="token keyword">AS</span> age_bucket
+
+<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> registered_voters
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+
+  
+  
+
+<span class="token keyword">WHERE</span> vb<span class="token punctuation">.</span>vb_tsmart_state <span class="token operator">=</span> <span class="token string">'AZ'</span>
+
+  
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+</code></pre>
+<h4 id="ld17">LD17<a aria-hidden="true" class="anchor-heading icon-link" href="#ld17"></a></h4>
+<pre class="language-sql"><code class="language-sql">  
+
+<span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.ld17_by_pctnum_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+
+<span class="token keyword">WITH</span> a <span class="token keyword">AS</span><span class="token punctuation">(</span>
+
+<span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+
+cw<span class="token punctuation">.</span>pctnum
+
+<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_vf_party <span class="token keyword">as</span> party
+
+<span class="token punctuation">,</span><span class="token keyword">CASE</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">18</span> <span class="token operator">AND</span> <span class="token number">24</span> <span class="token keyword">THEN</span> <span class="token string">'18-24'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">25</span> <span class="token operator">AND</span> <span class="token number">34</span> <span class="token keyword">THEN</span> <span class="token string">'25-34'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">25</span> <span class="token operator">AND</span> <span class="token number">34</span> <span class="token keyword">THEN</span> <span class="token string">'25-34'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">35</span> <span class="token operator">AND</span> <span class="token number">44</span> <span class="token keyword">THEN</span> <span class="token string">'35-44'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">45</span> <span class="token operator">AND</span> <span class="token number">54</span> <span class="token keyword">THEN</span> <span class="token string">'45-54'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">BETWEEN</span> <span class="token number">55</span> <span class="token operator">AND</span> <span class="token number">64</span> <span class="token keyword">THEN</span> <span class="token string">'55-64'</span>
+
+<span class="token keyword">WHEN</span> vb<span class="token punctuation">.</span>vb_voterbase_age <span class="token operator">></span> <span class="token number">65</span> <span class="token keyword">THEN</span> <span class="token string">'65+'</span>
+
+<span class="token keyword">ELSE</span> <span class="token string">'age not specified'</span>
+
+<span class="token keyword">END</span> <span class="token keyword">AS</span> age_bucket
+
+<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_voterbase_gender
+
+<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_voterbase_race <span class="token keyword">as</span> modeled_race
+
+<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>vb_vf_early_voter_status<span class="token punctuation">)</span> <span class="token keyword">AS</span> early_voters
+
+<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> registered_voters
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+
+  
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.targetsmart_pctnum_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">as</span> cw
+
+<span class="token keyword">ON</span> vb<span class="token punctuation">.</span>vb_vf_precinct_name <span class="token operator">=</span> cw<span class="token punctuation">.</span>vb_vf_precinct_name
+
+  
+
+<span class="token keyword">WHERE</span> vb<span class="token punctuation">.</span>vb_tsmart_state <span class="token operator">=</span> <span class="token string">'AZ'</span>
+
+  
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token number">4</span><span class="token punctuation">,</span><span class="token number">5</span>
+
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+
+<span class="token punctuation">)</span>
+
+  
+  
+
+<span class="token keyword">SELECT</span>
+
+pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span>
+
+<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>COUNTY
+
+<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>PRECINCTNA
+
+<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>LEGISLATIV
+
+<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>CONGRESSIO
+
+<span class="token punctuation">,</span> a<span class="token punctuation">.</span>party
+
+<span class="token punctuation">,</span> a<span class="token punctuation">.</span>age_bucket
+
+<span class="token punctuation">,</span> a<span class="token punctuation">.</span>vb_voterbase_gender
+
+<span class="token punctuation">,</span> a<span class="token punctuation">.</span>modeled_race
+
+<span class="token punctuation">,</span> a<span class="token punctuation">.</span>early_voters
+
+<span class="token punctuation">,</span> a<span class="token punctuation">.</span>registered_voters
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pg
+
+  
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> a
+
+<span class="token keyword">ON</span> pg<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> a<span class="token punctuation">.</span>pctnum
+
+  
+
+<span class="token keyword">WHERE</span> pg<span class="token punctuation">.</span>LEGISLATIV <span class="token operator">=</span> <span class="token number">17</span>
+
+  
+
+<span class="token punctuation">)</span>
+</code></pre>

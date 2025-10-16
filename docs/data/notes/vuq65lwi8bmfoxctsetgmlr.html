@@ -1,0 +1,53 @@
+<h1 id="pdc-project-data">Pdc Project Data<a aria-hidden="true" class="anchor-heading icon-link" href="#pdc-project-data"></a></h1>
+<p>Committee ID: 62950
+Committee Name: RAZE</p>
+<h5 id="c3-vr-data">c3 VR Data<a aria-hidden="true" class="anchor-heading icon-link" href="#c3-vr-data"></a></h5>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">TABLE</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.2024_program_summary.RAZE_VR_2024_PDC<span class="token punctuation">`</span></span> <span class="token keyword">AS</span><span class="token punctuation">(</span>
+<span class="token keyword">SELECT</span> 
+<span class="token string">'Rural Arizona Engagement'</span> <span class="token keyword">AS</span> OrganizationName
+<span class="token punctuation">,</span> vr<span class="token punctuation">.</span>Voter_File_VANID
+<span class="token punctuation">,</span> vr<span class="token punctuation">.</span>voterbase_id
+<span class="token punctuation">,</span> <span class="token string">'RAZE'</span> <span class="token keyword">AS</span> CommitteeName
+<span class="token punctuation">,</span> <span class="token string">'62950'</span> <span class="token keyword">AS</span> CommitteeID
+<span class="token punctuation">,</span> <span class="token string">'Voter Registration'</span> <span class="token keyword">AS</span> ContactTypeName
+<span class="token punctuation">,</span> <span class="token boolean">null</span> <span class="token keyword">AS</span> ContactResultName
+<span class="token punctuation">,</span> cc<span class="token punctuation">.</span>DateCanvassed
+<span class="token punctuation">,</span> <span class="token string">'AZ'</span> <span class="token keyword">AS</span> State
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.2024_program_summary.RAZE_VR_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vr
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.raze_ngpvan_data.TSM_OneAZ_ContactsContacts_VR<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cc
+  <span class="token keyword">ON</span> vr<span class="token punctuation">.</span>Voter_File_VANID <span class="token operator">=</span> cc<span class="token punctuation">.</span>VanID
+<span class="token punctuation">)</span>
+</code></pre>
+<p></p><blockquote>
+No note with name bquxjob_1bccd953_1961b2c196a.csv found in cache during parsing.
+</blockquote><p></p>
+<h5 id="c3-van-all-contact">c3 VAN all contact<a aria-hidden="true" class="anchor-heading icon-link" href="#c3-van-all-contact"></a></h5>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">TABLE</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.2024_program_summary.RAZE_VAN_ALL_2024_PDC<span class="token punctuation">`</span></span> <span class="token keyword">AS</span><span class="token punctuation">(</span>
+<span class="token keyword">SELECT</span> 
+<span class="token string">'Rural Arizona Engagement'</span> <span class="token keyword">AS</span> OrganizationName
+<span class="token punctuation">,</span> cc<span class="token punctuation">.</span>VanID
+<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>voterbase_id
+<span class="token punctuation">,</span> <span class="token string">'RAZE'</span> <span class="token keyword">AS</span> CommitteeName
+<span class="token punctuation">,</span> <span class="token string">'62950'</span> <span class="token keyword">AS</span> CommitteeID
+<span class="token punctuation">,</span> ct<span class="token punctuation">.</span>ContactTypeName
+<span class="token punctuation">,</span> ri<span class="token punctuation">.</span>ResultShortName
+<span class="token punctuation">,</span> cc<span class="token punctuation">.</span>DateCanvassed
+<span class="token punctuation">,</span> <span class="token string">'AZ'</span> <span class="token keyword">AS</span> State
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.raze_ngpvan_data.TSM_OneAZ_ContactsContacts_VF<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cc
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+  <span class="token keyword">ON</span> cc<span class="token punctuation">.</span>VanID <span class="token operator">=</span> vb<span class="token punctuation">.</span>vb_smartvan_id
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.contacttypeid<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ct
+  <span class="token keyword">ON</span> cc<span class="token punctuation">.</span>ContactTypeID <span class="token operator">=</span> ct<span class="token punctuation">.</span>ContactTypeID
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.resultid<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ri
+  <span class="token keyword">ON</span> cc<span class="token punctuation">.</span>ResultID <span class="token operator">=</span> ri<span class="token punctuation">.</span>ResultID
+
+<span class="token keyword">WHERE</span> EXTRACT<span class="token punctuation">(</span><span class="token keyword">YEAR</span> <span class="token keyword">FROM</span> cc<span class="token punctuation">.</span>DateCanvassed<span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token number">2024</span>
+<span class="token punctuation">)</span>
+<span class="token operator">!</span><span class="token punctuation">[</span><span class="token punctuation">[</span>bquxjob_5b02a5dd_1961b3a25c0<span class="token punctuation">.</span>csv<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token identifier"><span class="token punctuation">`</span><span class="token punctuation">`</span></span><span class="token punctuation">`</span>
+<span class="token operator">!</span><span class="token punctuation">[</span><span class="token punctuation">[</span>bquxjob_5b02a5dd_1961b3a25c0 <span class="token number">1.</span>csv<span class="token punctuation">]</span><span class="token punctuation">]</span>
+</code></pre>

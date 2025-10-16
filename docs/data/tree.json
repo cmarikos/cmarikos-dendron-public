@@ -1,0 +1,18 @@
+{
+  "roots": [
+    {
+      "key": "yxkfnaxvirvm4cfx78t2sf2",
+      "title": "Public",
+      "icon": null,
+      "hasTitleNumberOutlined": false,
+      "vaultName": "Dendron",
+      "children": []
+    }
+  ],
+  "child2parent": {
+    "yxkfnaxvirvm4cfx78t2sf2": null
+  },
+  "notesLabelById": {
+    "yxkfnaxvirvm4cfx78t2sf2": "Public"
+  }
+}

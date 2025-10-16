@@ -1,0 +1,406 @@
+<h1 id="actblue-sync">Actblue Sync<a aria-hidden="true" class="anchor-heading icon-link" href="#actblue-sync"></a></h1>
+<p></p><blockquote>
+No note with name Screenshot 2025-07-24 at 1.48.40 PM.png found in cache during parsing.
+</blockquote><p></p>
+<h1 id="actblue-donations-pipeline">ActBlue Donations Pipeline<a aria-hidden="true" class="anchor-heading icon-link" href="#actblue-donations-pipeline"></a></h1>
+<p><strong>(Parsons fetch → Spark load → BigQuery table)</strong>
+**
+This document explains how we automatically grab donation data from ActBlue, turn it into a table, and put that table into Google BigQuery so we can analyze it. We use three main tools to do this:</p>
+<ul>
+<li><strong>Parsons</strong> to talk to ActBlue’s API and download the data.</li>
+<li><strong>Spark</strong> to load that data into BigQuery (because Spark is already set up and approved for us).</li>
+<li><strong>BigQuery</strong> as the final home for the data.</li>
+</ul>
+<hr>
+<h2 id="0-tldr-quickstart">0. TL;DR (Quickstart)<a aria-hidden="true" class="anchor-heading icon-link" href="#0-tldr-quickstart"></a></h2>
+<pre class="language-bash"><code class="language-bash"><span class="token comment"># 1. Clone repo &#x26; create .env (see Section 3)</span>
+<span class="token comment"># 2. Create/activate venv &#x26; install deps</span>
+python -m venv parsons_env <span class="token operator">&#x26;&#x26;</span> <span class="token builtin class-name">source</span> parsons_env/bin/activate
+pip <span class="token function">install</span> -r requirements.txt
+
+<span class="token comment"># 3. Test locally</span>
+python cloud_function/main.py dummy dummy
+
+<span class="token comment"># 4. Schedule hourly</span>
+<span class="token function">crontab</span> -e    <span class="token comment"># add the line from Section 7</span>
+
+<span class="token comment"># 5. Check results</span>
+SELECT COUNT<span class="token punctuation">(</span>*<span class="token punctuation">)</span> FROM <span class="token variable"><span class="token variable">`</span>prod-organize-arizon-4e1c0a83.actblue_pipeline.donations<span class="token variable">`</span></span><span class="token punctuation">;</span>
+</code></pre>
+<p>If you just want to get things running:</p>
+<ol>
+<li>Make a <code>.env</code> file with your secrets (Section 3).</li>
+<li>Turn on a Python virtual environment and install packages.</li>
+<li>Run the script once to test it.</li>
+<li>Use <code>crontab</code> to have it run automatically every hour.</li>
+<li>Look in BigQuery to confirm rows are there.</li>
+</ol>
+<hr>
+<h2 id="1-what-this-pipeline-does">1. What This Pipeline Does<a aria-hidden="true" class="anchor-heading icon-link" href="#1-what-this-pipeline-does"></a></h2>
+<ol>
+<li><strong>Pulls ActBlue contribution data</strong> (CSV API) for a given date range using the Parsons <code>ActBlue</code> connector.</li>
+<li><strong>Transforms rows to Pandas → Spark DataFrame</strong> locally.</li>
+<li><strong>Writes to BigQuery</strong> using the Spark BigQuery connector (with a GCS staging bucket).</li>
+<li><strong>Runs hourly via local cron</strong> (for now) to stay fresh.</li>
+<li><strong>Logs output</strong> to <code>logs/actblue.log</code>.</li>
+</ol>
+<blockquote>
+<p>We chose Spark for loading to BigQuery because it was already set up and approved (“it was a fight to get with engineering”). Parsons <em>can</em> write to BQ, but we’re standardizing on Spark for this part.</p>
+</blockquote>
+<ul>
+<li>We ask ActBlue for a spreadsheet of donations from specific dates.</li>
+<li>We briefly turn that spreadsheet into data structures Python and Spark understand.</li>
+<li>Then Spark sends it to BigQuery (it uses a temporary Google Cloud Storage bucket behind the scenes).</li>
+<li>A simple computer “alarm clock” (cron) runs this script again every hour.</li>
+<li>Everything the script prints goes into a log file so you can see if it worked.</li>
+<li>We’re using Spark to write to BigQuery mainly because it’s already configured and approved internally; Parsons could do it, but one reliable method is better than mixing both.</li>
+</ul>
+<hr>
+<h2 id="2-high-level-architecture">2. High-Level Architecture<a aria-hidden="true" class="anchor-heading icon-link" href="#2-high-level-architecture"></a></h2>
+<pre><code>         ┌──────────────┐
+         │   cron (mac) │  hourly
+         └─────┬────────┘
+               │ runs run_actblue.sh
+      ┌────────▼─────────┐
+      │  main.py (Python)│
+      │  - Parsons fetch │
+      │  - Pandas → Spark│
+      └────────┬─────────┘
+               │ Spark write (GCS temp)
+               ▼
+       ┌────────────────────────────┐
+       │ BigQuery: actblue_pipeline │
+       │  table: donations          │
+       └────────────────────────────┘
+</code></pre>
+<p>Think of it like this:</p>
+<ul>
+<li>Your computer’s scheduler (cron) calls a shell script on a timer.</li>
+<li>That script runs <code>main.py</code>, which downloads data and prepares it.</li>
+<li>Spark sends the data to BigQuery.</li>
+<li>BigQuery stores the final table. Done.</li>
+</ul>
+<hr>
+<h2 id="3-environment--secrets">3. Environment &#x26; Secrets<a aria-hidden="true" class="anchor-heading icon-link" href="#3-environment--secrets"></a></h2>
+<p>Create a <code>.env</code> in repo root:</p>
+<pre class="language-env"><code class="language-env"># ActBlue credentials (from ActBlue API portal)
+ACTBLUE_CLIENT_UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ACTBLUE_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# GCP credentials (local dev ONLY)
+GOOGLE_APPLICATION_CREDENTIALS=/Users/&#x3C;you>/path/to/secrets/spark-bigquery-sa.json
+
+# BigQuery destination (dataset.table)
+BQ_TABLE_ID=actblue_pipeline.donations
+
+# GCS bucket for Spark temp files
+GCS_TEMP_BUCKET=cmarikos-sparky-temp
+</code></pre>
+<p><strong>Important:</strong></p>
+<ul>
+<li>The service account in <code>GOOGLE_APPLICATION_CREDENTIALS</code> needs <strong>BigQuery Data Editor</strong> (or better) on the dataset and <strong>Storage Object Admin</strong> on <code>GCS_TEMP_BUCKET</code>.</li>
+<li>Do <strong>not</strong> commit your <code>.env</code> or JSON key.</li>
+</ul>
+<p>A <code>.env</code> file is where we safely store passwords and keys so they don’t get committed to GitHub.</p>
+<ul>
+<li>You get your ActBlue keys from your ActBlue account.</li>
+<li><code>GOOGLE_APPLICATION_CREDENTIALS</code> points to a file that lets your script act as your Google project.</li>
+<li><code>BQ_TABLE_ID</code> tells the script where in BigQuery to put the data.</li>
+<li><code>GCS_TEMP_BUCKET</code> is just a temporary place in Google Cloud Storage that Spark uses during upload.</li>
+</ul>
+<hr>
+<h2 id="4-code-layout">4. Code Layout<a aria-hidden="true" class="anchor-heading icon-link" href="#4-code-layout"></a></h2>
+<pre><code>actblue-pipeline/
+│
+├── cloud_function/
+│   └── main.py                # The pipeline entrypoint
+│
+├── secrets/                   # local JSON key (ignored in git)
+│
+├── logs/
+│   └── actblue.log            # cron output (created at runtime)
+│
+├── run_actblue.sh             # wrapper script for cron
+├── requirements.txt
+├── .env
+└── README.md (this file)
+</code></pre>
+<p>This shows where everything lives in the project:</p>
+<ul>
+<li><code>main.py</code> is the script that actually does the work.</li>
+<li><code>secrets</code> stores the private Google key file (but is not checked into git).</li>
+<li><code>logs</code> holds the log file so you can see what happened when cron ran.</li>
+<li><code>run_actblue.sh</code> is the small script cron runs.</li>
+<li><code>requirements.txt</code> lists all the Python packages we need.</li>
+<li><code>.env</code> is your local secrets file.</li>
+<li><code>README.md</code> is this documentation.</li>
+</ul>
+<hr>
+<h2 id="5-mainpy-current-working-version">5. main.py (Current Working Version)<a aria-hidden="true" class="anchor-heading icon-link" href="#5-mainpy-current-working-version"></a></h2>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> parsons <span class="token keyword">import</span> ActBlue
+<span class="token keyword">import</span> os
+<span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+<span class="token keyword">from</span> dotenv <span class="token keyword">import</span> load_dotenv
+<span class="token keyword">from</span> pyspark<span class="token punctuation">.</span>sql <span class="token keyword">import</span> SparkSession
+<span class="token keyword">import</span> findspark
+
+<span class="token comment"># Point findspark to your Spark install</span>
+findspark<span class="token punctuation">.</span>init<span class="token punctuation">(</span><span class="token string">"/Users/cmarikos/spark-3.5.4-bin-hadoop3"</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span>event<span class="token punctuation">,</span> context<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># Load env</span>
+    load_dotenv<span class="token punctuation">(</span>override<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"✅ Loaded .env"</span><span class="token punctuation">)</span>
+
+    <span class="token comment"># GCP creds</span>
+    os<span class="token punctuation">.</span>environ<span class="token punctuation">[</span><span class="token string">"GOOGLE_APPLICATION_CREDENTIALS"</span><span class="token punctuation">]</span> <span class="token operator">=</span> os<span class="token punctuation">.</span>getenv<span class="token punctuation">(</span><span class="token string">"GOOGLE_APPLICATION_CREDENTIALS"</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"🔐 Using credentials from: </span><span class="token interpolation"><span class="token punctuation">{</span>os<span class="token punctuation">.</span>environ<span class="token punctuation">[</span><span class="token string">'GOOGLE_APPLICATION_CREDENTIALS'</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+    <span class="token comment"># Fetch ActBlue</span>
+    ab <span class="token operator">=</span> ActBlue<span class="token punctuation">(</span>
+        actblue_client_uuid<span class="token operator">=</span>os<span class="token punctuation">.</span>getenv<span class="token punctuation">(</span><span class="token string">"ACTBLUE_CLIENT_UUID"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        actblue_client_secret<span class="token operator">=</span>os<span class="token punctuation">.</span>getenv<span class="token punctuation">(</span><span class="token string">"ACTBLUE_CLIENT_SECRET"</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span>
+
+    <span class="token comment"># NOTE: ActBlue max range is 6 months</span>
+    donations <span class="token operator">=</span> ab<span class="token punctuation">.</span>get_contributions<span class="token punctuation">(</span>
+        csv_type<span class="token operator">=</span><span class="token string">'paid_contributions'</span><span class="token punctuation">,</span>
+        date_range_start<span class="token operator">=</span><span class="token string">'2025-01-01'</span><span class="token punctuation">,</span>
+        date_range_end<span class="token operator">=</span><span class="token string">'2025-06-01'</span>
+    <span class="token punctuation">)</span>
+
+    rows <span class="token operator">=</span> donations<span class="token punctuation">.</span>to_dicts<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"📥 Retrieved </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span>rows<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string"> donations from ActBlue."</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>rows<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+    <span class="token comment"># Pandas → Spark</span>
+    df_pd <span class="token operator">=</span> pd<span class="token punctuation">.</span>DataFrame<span class="token punctuation">(</span>rows<span class="token punctuation">)</span>
+    spark <span class="token operator">=</span> <span class="token punctuation">(</span>SparkSession<span class="token punctuation">.</span>builder
+             <span class="token punctuation">.</span>config<span class="token punctuation">(</span><span class="token string">"spark.driver.bindAddress"</span><span class="token punctuation">,</span> <span class="token string">"127.0.0.1"</span><span class="token punctuation">)</span>  <span class="token comment"># fix port/bind issues on mac</span>
+             <span class="token punctuation">.</span>config<span class="token punctuation">(</span><span class="token string">"spark.app.name"</span><span class="token punctuation">,</span> <span class="token string">"actblue_to_bq"</span><span class="token punctuation">)</span>
+             <span class="token punctuation">.</span>getOrCreate<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    df_spark <span class="token operator">=</span> spark<span class="token punctuation">.</span>createDataFrame<span class="token punctuation">(</span>df_pd<span class="token punctuation">)</span>
+
+    <span class="token comment"># Write to BigQuery</span>
+    df_spark<span class="token punctuation">.</span>write \
+        <span class="token punctuation">.</span><span class="token builtin">format</span><span class="token punctuation">(</span><span class="token string">"bigquery"</span><span class="token punctuation">)</span> \
+        <span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">"temporaryGcsBucket"</span><span class="token punctuation">,</span> os<span class="token punctuation">.</span>environ<span class="token punctuation">[</span><span class="token string">"GCS_TEMP_BUCKET"</span><span class="token punctuation">]</span><span class="token punctuation">)</span> \
+        <span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">"writeMethod"</span><span class="token punctuation">,</span> <span class="token string">"direct"</span><span class="token punctuation">)</span> \
+        <span class="token punctuation">.</span>mode<span class="token punctuation">(</span><span class="token string">"overwrite"</span><span class="token punctuation">)</span> \
+        <span class="token punctuation">.</span>save<span class="token punctuation">(</span><span class="token string">"prod-organize-arizon-4e1c0a83.actblue_pipeline.donations"</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"✅ Wrote to BigQuery via Spark"</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    main<span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+</code></pre>
+<ul>
+<li>We load environment variables so the script knows our passwords and target locations.</li>
+<li>We tell Spark where its installation is (<code>findspark.init</code>).</li>
+<li>We connect to ActBlue with our keys, ask for donations in a certain timeframe (keep it under 6 months each call).</li>
+<li>We convert the data into Pandas and then Spark format.</li>
+<li>We tell Spark to send it to BigQuery, overwriting whatever was there.</li>
+<li>If everything works, we print a success message.</li>
+</ul>
+<hr>
+<h2 id="6-local-execution">6. Local Execution<a aria-hidden="true" class="anchor-heading icon-link" href="#6-local-execution"></a></h2>
+<h3 id="61-one-off-manual-run">6.1 One-off manual run<a aria-hidden="true" class="anchor-heading icon-link" href="#61-one-off-manual-run"></a></h3>
+<pre class="language-bash"><code class="language-bash"><span class="token builtin class-name">source</span> parsons_env/bin/activate
+python cloud_function/main.py dummy dummy
+</code></pre>
+<h3 id="62-logs">6.2 Logs<a aria-hidden="true" class="anchor-heading icon-link" href="#62-logs"></a></h3>
+<ul>
+<li>
+<p>All stdout/stderr are appended to <code>logs/actblue.log</code> in cron runs.</p>
+</li>
+<li>
+<p>For quick tailing:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token function">tail</span> -f logs/actblue.log
+</code></pre>
+</li>
+</ul>
+<p>To run once: turn on your virtual environment and run the Python file.
+When cron runs it, you won’t see the output in your terminal, so check the log file with <code>tail -f</code> to see live updates.</p>
+<hr>
+<h2 id="7-scheduling-local-cron">7. Scheduling (Local cron)<a aria-hidden="true" class="anchor-heading icon-link" href="#7-scheduling-local-cron"></a></h2>
+<ol>
+<li><strong>Wrapper script</strong> <code>run_actblue.sh</code> (repo root):</li>
+</ol>
+<pre class="language-bash"><code class="language-bash"><span class="token shebang important">#!/bin/zsh</span>
+<span class="token builtin class-name">set</span> -euo pipefail
+
+<span class="token comment"># 1) Go to project</span>
+<span class="token builtin class-name">cd</span> /Users/cmarikos/pyspark/razea/actblue-pipeline
+
+<span class="token comment"># 2) Activate venv</span>
+<span class="token builtin class-name">source</span> parsons_env/bin/activate
+
+<span class="token comment"># 3) Run</span>
+python cloud_function/main.py dummy dummy <span class="token operator">>></span> logs/actblue.log <span class="token operator"><span class="token file-descriptor important">2</span>></span><span class="token file-descriptor important">&#x26;1</span>
+</code></pre>
+<ol start="2">
+<li>Make executable &#x26; create logs dir <strong>once</strong>:</li>
+</ol>
+<pre class="language-bash"><code class="language-bash"><span class="token function">chmod</span> +x run_actblue.sh
+<span class="token function">mkdir</span> -p logs
+</code></pre>
+<ol start="3">
+<li><strong>Add to crontab</strong> (hourly):</li>
+</ol>
+<pre class="language-bash"><code class="language-bash"><span class="token function">crontab</span> -e
+</code></pre>
+<p>Then paste:</p>
+<pre><code>0 * * * * /bin/zsh -c '/Users/cmarikos/pyspark/razea/actblue-pipeline/run_actblue.sh'
+</code></pre>
+<p>Save &#x26; exit. Confirm:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token function">crontab</span> -l
+</code></pre>
+<p>Cron is a built-in scheduler on your Mac.</p>
+<ul>
+<li>The little <code>run_actblue.sh</code> script is what cron calls.</li>
+<li><code>chmod +x</code> just makes the script runnable.</li>
+<li><code>crontab -e</code> opens your cron schedule—put in a line that says “run this at the start of every hour.”</li>
+<li><code>crontab -l</code> shows what’s currently scheduled.</li>
+</ul>
+<hr>
+<h2 id="8-bigquery-side">8. BigQuery Side<a aria-hidden="true" class="anchor-heading icon-link" href="#8-bigquery-side"></a></h2>
+<ul>
+<li><strong>Dataset</strong>: <code>actblue_pipeline</code> (must exist).</li>
+<li><strong>Table</strong>: <code>donations</code> (Spark will create/overwrite).</li>
+<li><strong>Schema</strong>: inferred on write. To enforce schema, define it in Spark or pre-create table.</li>
+<li>Optional: Connect repo to BigQuery Repositories for SQL/Python versioning (see separate doc/slide).</li>
+</ul>
+<p>Tell BigQuery where to put the data (dataset + table). If the table doesn’t exist, Spark makes it. If you care about specific column types, make the table first or define schema in Spark. Optional bonus: you can connect your GitHub repo to BigQuery to version your SQL scripts.</p>
+<hr>
+<h2 id="9-common-errors--fixes">9. Common Errors &#x26; Fixes<a aria-hidden="true" class="anchor-heading icon-link" href="#9-common-errors--fixes"></a></h2>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Error / Symptom</th><th>Likely Cause</th><th>Fix</th></tr></thead><tbody><tr><td><code>DefaultCredentialsError: File … not found</code></td><td><code>GOOGLE_APPLICATION_CREDENTIALS</code> path wrong or .env not loaded</td><td>Correct path, call <code>load_dotenv(override=True)</code> early</td></tr><tr><td><code>Date range must be 6 months or less</code> (422)</td><td>ActBlue API limit</td><td>Split into ≤6‑month windows or run incrementally</td></tr><tr><td><code>The destination table has no schema</code></td><td>Using <code>insert_rows_json</code> on empty table</td><td>Use Spark overwrite or precreate schema</td></tr><tr><td><code>Column … not found in schema</code> / <code>Field reserved already exists</code></td><td>Mismatch / duplicates when Parsons wrote earlier</td><td>Drop/rename columns; let Spark overwrite table cleanly</td></tr><tr><td><code>ModuleNotFoundError: pandas</code></td><td>Missing dep in venv</td><td><code>pip install pandas</code> or add to requirements.txt</td></tr><tr><td><code>Service 'sparkDriver' failed to bind</code> / <code>BlockManagerId</code> NPE</td><td>Spark can’t bind to port / wrong bind address</td><td>Set <code>spark.driver.bindAddress=127.0.0.1</code> in SparkSession builder</td></tr><tr><td><code>Not found: Dataset …</code></td><td>Dataset name wrong or service account missing perms</td><td>Verify dataset exists; grant BigQuery permissions</td></tr><tr><td><code>Dataform’s default service account cannot access secret</code> (BigQuery repo)</td><td>Secret Manager IAM missing</td><td>Add <code>Secret Manager Secret Accessor</code> to Dataform SA</td></tr></tbody></table></div>
+<p>This table is your quick “why is this breaking?” cheat sheet. Match your error, see the likely cause, and try the suggested fix. 90% of the pain points we hit are listed here.</p>
+<hr>
+<h2 id="10-monitoring--maintenance">10. Monitoring &#x26; Maintenance<a aria-hidden="true" class="anchor-heading icon-link" href="#10-monitoring--maintenance"></a></h2>
+<ul>
+<li><strong>Logs</strong>: Review <code>logs/actblue.log</code> for failures.</li>
+<li><strong>Alerting</strong>: (Optional) wrap cron script with <code>if ! …; then mail -s "ActBlue job failed" you@org.org; fi</code>.</li>
+<li><strong>Data freshness check</strong>: Add a daily query in Looker Studio or BigQuery scheduled query to confirm new rows.</li>
+<li><strong>Key rotation</strong>: Document how/when to rotate ActBlue &#x26; GCP keys; update <code>.env</code> secrets accordingly.</li>
+</ul>
+<p>Keep an eye on it! Check the log file now and then. If you want an email when it fails, you can add an if/then to the cron script. You might also build a dashboard or scheduled check to make sure yesterday’s data arrived. Remember to update keys when they expire.</p>
+<hr>
+<h2 id="11-data-dictionary-example-snippet">11. Data Dictionary (example snippet)<a aria-hidden="true" class="anchor-heading icon-link" href="#11-data-dictionary-example-snippet"></a></h2>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>field_name</th><th>type</th><th>source</th><th>description</th><th>example</th></tr></thead><tbody><tr><td>receipt_id</td><td>STRING</td><td>ActBlue CSV</td><td>Unique receipt per donation</td><td>AB266200948</td></tr><tr><td>date</td><td>TIMESTAMP</td><td>ActBlue CSV</td><td>Donation datetime</td><td>2025-01-06 03:20:00</td></tr><tr><td>amount</td><td>NUMERIC</td><td>ActBlue CSV</td><td>Contribution amount (USD)</td><td>2.00</td></tr><tr><td>donor_email</td><td>STRING</td><td>ActBlue CSV</td><td>Contributor’s email</td><td><a href="/mailto:foo@bar.com">foo@bar.com</a></td></tr><tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr></tbody></table></div>
+<p>Maintain this in a Sheet or Markdown for clarity. (Original CSV headers have spaces; Spark lowers none unless we do. Consider normalizing column names before write.)</p>
+<p>This is a simple table that explains what each column means. It helps future you (or a teammate) understand what <code>receipt_id</code> or <code>donor_email</code> is. You can keep this as a spreadsheet or markdown file. If you want cleaner column names, use pandas to rename them before writing to BigQuery.</p>
+<hr>
+<h2 id="12-change-management--versioning">12. Change Management &#x26; Versioning<a aria-hidden="true" class="anchor-heading icon-link" href="#12-change-management--versioning"></a></h2>
+<ul>
+<li><strong>Code changes</strong>: PRs on GitHub (<code>main</code> branch) + tag releases.</li>
+<li><strong>Schema changes</strong>: Document in README + bump a version file (<code>schema_version.txt</code>).</li>
+<li><strong>Cron cadence changes</strong>: Update <code>crontab -e</code>, commit note to repo, and notify team.</li>
+</ul>
+<p><strong>For future improvement:</strong>
+When you change the code, use GitHub pull requests so others can review. If you change the table structure, write it down and maybe keep a version number. If you change how often the job runs, tell people and note it somewhere.</p>
+<hr>
+<h2 id="13-future-improvements">13. Future Improvements<a aria-hidden="true" class="anchor-heading icon-link" href="#13-future-improvements"></a></h2>
+<ul>
+<li>Move scheduling to <strong>Cloud Scheduler + Cloud Functions/Run</strong> (no local cron dependency).</li>
+<li>Parameterize date ranges (run “yesterday only”).</li>
+<li>Add retry/backoff and Slack alerts on failure.</li>
+<li>Consider using Parsons to push to BQ if Spark complicates local env (but keep one consistent method).</li>
+<li>Add unit tests for transform logic (pytests for date parsing, schema normalization).</li>
+</ul>

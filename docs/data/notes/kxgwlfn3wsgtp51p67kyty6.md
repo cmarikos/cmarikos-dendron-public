@@ -1,0 +1,3 @@
+- Structure the reporting around the strategic plan goals more closely
+- Ask comms for a cover page and other misc design elements, maybe a design review? (comms volunteered this for Q2 and onward-- asked us to put in a comms request)
+- 

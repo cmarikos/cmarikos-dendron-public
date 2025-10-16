@@ -1,0 +1,241 @@
+<h1 id="marguerite-casey-foundation-2025">Marguerite Casey Foundation 2025<a aria-hidden="true" class="anchor-heading icon-link" href="#marguerite-casey-foundation-2025"></a></h1>
+<p><a href="https://mcf.smartsimple.com/s_Login.jsp">MCF Application Portal</a>
+<a href="https://docs.google.com/document/d/18VJaj5Ll-3EA4VQEQn_LAFxpXEcYkJkpht1Agn_JaSg/edit?tab=t.0">Application Working Doc</a></p>
+<p><a href="https://docs.google.com/spreadsheets/d/1kt9CvbyI0YigTP9MIpjf6ntn-7a1qyhNgR2k2cCTO0o/edit?usp=sharing">My working sheet</a></p>
+<h3 id="data-components">Data Components<a aria-hidden="true" class="anchor-heading icon-link" href="#data-components"></a></h3>
+<h4 id="staff-metrics">Staff Metrics<a aria-hidden="true" class="anchor-heading icon-link" href="#staff-metrics"></a></h4>
+<p>%%
+Data source: employment data
+%%</p>
+<h5 id="executive-leadership-demographic-information">Executive Leadership Demographic Information<a aria-hidden="true" class="anchor-heading icon-link" href="#executive-leadership-demographic-information"></a></h5>
+<p>Executive leadership is defined here as Executive Director(s) or CEO(s) only.</p>
+<ul>
+<li>% African American or Black: 0</li>
+<li>% American Indian or Alaska Native: 0</li>
+<li>% Asian or Asian American (including Indian Subcontinent): 0 </li>
+<li>% Pacific Islander or Native Hawaiian: 0</li>
+<li>% Hispanic or Latinx: 2</li>
+<li>% White: 1</li>
+<li>% Multiracial or Other: 0</li>
+<li>% Middle Eastern or North African: 0</li>
+</ul>
+<h5 id="staff-demographic-information">Staff Demographic Information<a aria-hidden="true" class="anchor-heading icon-link" href="#staff-demographic-information"></a></h5>
+<ul>
+<li>% African American or Black: 1</li>
+<li>% American Indian or Alaska Native: 1</li>
+<li>% Asian or Asian American (including Indian Subcontinent): 1</li>
+<li>% Pacific Islander or Native Hawaiian: 1</li>
+<li>% Hispanic or Latinx: 19</li>
+<li>% White 8</li>
+<li>% Multiracial or Other: 10</li>
+<li>% Middle Eastern or North African: 0</li>
+</ul>
+<h4 id="constituency-demographic-information">Constituency Demographic Information<a aria-hidden="true" class="anchor-heading icon-link" href="#constituency-demographic-information"></a></h4>
+<blockquote>
+<p>Going to be using the 2018 5 year ACS data for this and including all populations in our target counties. This is the most recent ACS that surveys AZ.</p>
+<p>Getting my brain back into census data mode. <a href="https://www.census.gov/library/reference/code-lists/ansi.html#cou">This breakdown of FIPS/ANSI codes and ACS geoids was helpful</a>. </p>
+<pre><code>Arizona's state ID is 04
+	[Here is the county breakdown](https://www2.census.gov/geo/docs/reference/codes2020/cousub/st04_az_cousub2020.txt)
+</code></pre>
+</blockquote>
+<pre class="language-sql"><code class="language-SQL">  <span class="token keyword">CASE</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04003'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04005'</span> <span class="token keyword">THEN</span> <span class="token string">'Coconino'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04015'</span> <span class="token keyword">THEN</span> <span class="token string">'Mohave'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04019'</span> <span class="token keyword">THEN</span> <span class="token string">'Pima'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04021'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04023'</span> <span class="token keyword">THEN</span> <span class="token string">'Santa Cruz'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04025'</span> <span class="token keyword">THEN</span> <span class="token string">'Yavapai'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04027'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+    <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+  <span class="token keyword">END</span> <span class="token keyword">AS</span> county
+</code></pre>
+<p>Please tell us about the demographics of your organization's target constituency.</p>
+<p>Constituency is defined here as the <em>individuals who directly benefit from the work of your organization</em>.</p>
+<p>Note:
+I am defining our constituency as the entire population of the counties we’re active in. Partly because that data is easily accessible and clean. With the time we have to submit this using the broad, accessible data makes the most sense to me</p>
+<h6 id="urbanicity">Urbanicity<a aria-hidden="true" class="anchor-heading icon-link" href="#urbanicity"></a></h6>
+<p><a href="https://crh.arizona.edu/sites/default/files/2023-06/2300601_Census-RuralUpdate-Brief.pdf">Using this U of A Census analysis</a> for our target counties, I got the total population of our target counties, then got a percentage of rural pop. I omitted Pima county since we don't do work in the city and it really skews the numbers.</p>
+<ul>
+<li>%Rural: 27%</li>
+<li>% Suburban:</li>
+<li>% Urban:  73%</li>
+</ul>
+<h6 id="raceethnicity">Race/Ethnicity<a aria-hidden="true" class="anchor-heading icon-link" href="#raceethnicity"></a></h6>
+<ul>
+<li>% African American or Black:</li>
+<li>% American Indian or Alaska Native:</li>
+<li>% Asian or Asian American (including Indian Subcontinent):</li>
+<li>% Pacific Islander or Native Hawaiian: - no data/possibly split between "Other", "American Indian",  and "Asian"</li>
+<li>% Hispanic or Latinx:</li>
+<li>% White:</li>
+<li>% Multiracial or Other:</li>
+<li>% Middle Eastern or North African: - no data</li>
+</ul>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+  <span class="token keyword">CASE</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04003'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04005'</span> <span class="token keyword">THEN</span> <span class="token string">'Coconino'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04015'</span> <span class="token keyword">THEN</span> <span class="token string">'Mohave'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04019'</span> <span class="token keyword">THEN</span> <span class="token string">'Pima'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04021'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04023'</span> <span class="token keyword">THEN</span> <span class="token string">'Santa Cruz'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04025'</span> <span class="token keyword">THEN</span> <span class="token string">'Yavapai'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04027'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+    <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+  <span class="token keyword">END</span> <span class="token keyword">AS</span> county
+  <span class="token punctuation">,</span> black_pop
+  <span class="token punctuation">,</span> amerindian_pop
+  <span class="token punctuation">,</span> asian_pop
+  <span class="token punctuation">,</span> hispanic_pop
+  <span class="token punctuation">,</span> white_pop
+  <span class="token punctuation">,</span> other_race_pop
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>cta-open-data.american_community_survey_linked.county_2018_5yr<span class="token punctuation">`</span></span>
+<span class="token keyword">WHERE</span> 
+  geo_id <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'04003'</span><span class="token punctuation">,</span><span class="token string">'04005'</span><span class="token punctuation">,</span><span class="token string">'04015'</span><span class="token punctuation">,</span><span class="token string">'04019'</span><span class="token punctuation">,</span><span class="token string">'04021'</span><span class="token punctuation">,</span><span class="token string">'04023'</span><span class="token punctuation">,</span><span class="token string">'04025'</span><span class="token punctuation">,</span><span class="token string">'04027'</span><span class="token punctuation">)</span>
+</code></pre>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th>black_percent</th><th>amerindian_percent</th><th>asian_percent</th><th>hispanic_percent</th><th>white_percent</th><th>other_race_percent</th></tr></thead><tbody><tr><td>Total</td><td>2.72%</td><td>3.82%</td><td>2.04%</td><td>34.38%</td><td>56.93%</td><td>0.11%</td></tr></tbody></table></div>
+<h6 id="additional-demographics">Additional Demographics<a aria-hidden="true" class="anchor-heading icon-link" href="#additional-demographics"></a></h6>
+<ul>
+<li>% Low-income: 19.27%
+<ul>
+<li>Using the <a href="https://www.huduser.gov/portal/datasets/home-datasets/files/HOME_IncomeLmts_State_AZ_2024.pdf">HUD income guidelines</a> I'm selecting low income pop as those making less than 57.6k a year, which is the highest threshold for county based "low income" benefits</li>
+</ul>
+</li>
+</ul>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+  <span class="token keyword">CASE</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04003'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04005'</span> <span class="token keyword">THEN</span> <span class="token string">'Coconino'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04015'</span> <span class="token keyword">THEN</span> <span class="token string">'Mohave'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04019'</span> <span class="token keyword">THEN</span> <span class="token string">'Pima'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04021'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04023'</span> <span class="token keyword">THEN</span> <span class="token string">'Santa Cruz'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04025'</span> <span class="token keyword">THEN</span> <span class="token string">'Yavapai'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04027'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+    <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+  <span class="token keyword">END</span> <span class="token keyword">AS</span> county
+ <span class="token punctuation">,</span> total_pop
+ <span class="token punctuation">,</span> income_10000_14999
+ <span class="token punctuation">,</span> income_15000_19999
+ <span class="token punctuation">,</span> income_20000_24999
+ <span class="token punctuation">,</span> income_25000_29999
+ <span class="token punctuation">,</span> income_30000_34999
+ <span class="token punctuation">,</span> income_35000_39999
+ <span class="token punctuation">,</span> income_40000_44999
+ <span class="token punctuation">,</span> income_45000_49999
+ <span class="token punctuation">,</span> income_50000_59999
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>cta-open-data.american_community_survey_linked.county_2018_5yr<span class="token punctuation">`</span></span>
+<span class="token keyword">WHERE</span> 
+  geo_id <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'04003'</span><span class="token punctuation">,</span><span class="token string">'04005'</span><span class="token punctuation">,</span><span class="token string">'04015'</span><span class="token punctuation">,</span><span class="token string">'04019'</span><span class="token punctuation">,</span><span class="token string">'04021'</span><span class="token punctuation">,</span><span class="token string">'04023'</span><span class="token punctuation">,</span><span class="token string">'04025'</span><span class="token punctuation">,</span><span class="token string">'04027'</span><span class="token punctuation">)</span>
+
+
+</code></pre>
+<ul>
+<li>% Elder/senior (65 years and older): 20.30%
+<ul>
+<li>Census doesn't have an over 65</li>
+</ul>
+</li>
+</ul>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+	  <span class="token keyword">CASE</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04003'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04005'</span> <span class="token keyword">THEN</span> <span class="token string">'Coconino'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04015'</span> <span class="token keyword">THEN</span> <span class="token string">'Mohave'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04019'</span> <span class="token keyword">THEN</span> <span class="token string">'Pima'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04021'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04023'</span> <span class="token keyword">THEN</span> <span class="token string">'Santa Cruz'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04025'</span> <span class="token keyword">THEN</span> <span class="token string">'Yavapai'</span>
+	      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04027'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+	    <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+	  <span class="token keyword">END</span> <span class="token keyword">AS</span> county
+	 <span class="token punctuation">,</span> total_pop
+	 <span class="token punctuation">,</span> female_65_to_66
+	 <span class="token punctuation">,</span> female_67_to_69
+	 <span class="token punctuation">,</span> female_70_to_74
+	 <span class="token punctuation">,</span> female_75_to_79
+	 <span class="token punctuation">,</span> female_80_to_84
+	 <span class="token punctuation">,</span> female_85_and_over
+	 <span class="token punctuation">,</span> male_65_to_66
+	 <span class="token punctuation">,</span> male_67_to_69
+	 <span class="token punctuation">,</span> male_70_to_74
+	 <span class="token punctuation">,</span> male_75_to_79
+	 <span class="token punctuation">,</span> male_80_to_84
+	 <span class="token punctuation">,</span> male_85_and_over
+
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>cta-open-data.american_community_survey_linked.county_2018_5yr<span class="token punctuation">`</span></span>
+<span class="token keyword">WHERE</span> 
+  geo_id <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'04003'</span><span class="token punctuation">,</span><span class="token string">'04005'</span><span class="token punctuation">,</span><span class="token string">'04015'</span><span class="token punctuation">,</span><span class="token string">'04019'</span><span class="token punctuation">,</span><span class="token string">'04021'</span><span class="token punctuation">,</span><span class="token string">'04023'</span><span class="token punctuation">,</span><span class="token string">'04025'</span><span class="token punctuation">,</span><span class="token string">'04027'</span><span class="token punctuation">)</span>
+
+
+</code></pre>
+<ul>
+<li>% Youth (16-24 years): 13.03%</li>
+</ul>
+<p>Subtract the pop_16_over from pop_25_over to get 16-25 (not gonna fuss that this includes 25 year olds, not worth the headache)</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+  <span class="token keyword">CASE</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04003'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04005'</span> <span class="token keyword">THEN</span> <span class="token string">'Coconino'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04015'</span> <span class="token keyword">THEN</span> <span class="token string">'Mohave'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04019'</span> <span class="token keyword">THEN</span> <span class="token string">'Pima'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04021'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04023'</span> <span class="token keyword">THEN</span> <span class="token string">'Santa Cruz'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04025'</span> <span class="token keyword">THEN</span> <span class="token string">'Yavapai'</span>
+      <span class="token keyword">WHEN</span> geo_id <span class="token operator">=</span> <span class="token string">'04027'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+    <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+  <span class="token keyword">END</span> <span class="token keyword">AS</span> county
+ <span class="token punctuation">,</span> total_pop
+ <span class="token punctuation">,</span> pop_16_over
+ <span class="token punctuation">,</span> pop_25_years_over
+ <span class="token punctuation">,</span> pop_25_64
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>cta-open-data.american_community_survey_linked.county_2018_5yr<span class="token punctuation">`</span></span>
+<span class="token keyword">WHERE</span> 
+  geo_id <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'04003'</span><span class="token punctuation">,</span><span class="token string">'04005'</span><span class="token punctuation">,</span><span class="token string">'04015'</span><span class="token punctuation">,</span><span class="token string">'04019'</span><span class="token punctuation">,</span><span class="token string">'04021'</span><span class="token punctuation">,</span><span class="token string">'04023'</span><span class="token punctuation">,</span><span class="token string">'04025'</span><span class="token punctuation">,</span><span class="token string">'04027'</span><span class="token punctuation">)</span>
+
+</code></pre>
+<ul>
+<li>% LGBTQ+: 4.5%
+<pre><code>- Using the statewide estimate from the [UCLA Williams Institute AZ Profile](https://williamsinstitute.law.ucla.edu/visualization/lgbt-stats/?topic=LGBT&#x26;area=4#about-the-data) and assuming counties are *roughly* similar because there doesn't seem to be good county data
+</code></pre>
+--- the following are bad ideas:
+<pre><code>- gonna use modeled scores from the voter file since any "DEI" census data has been deleted. This will not include unregistered ppl, so idk if its good
+- Statewide pop is ~4.5% so if it's way off from that I'll ask follow up questions
+</code></pre>
+</li>
+<li>% Immigrant/refugee: 36.34%
+<pre><code>- The [U of A MAP](https://mapazdashboard.arizona.edu/article/bucking-trend-arizonas-share-foreign-born-falls#:~:text=Santa%20Cruz%20County%20reported%20the,the%20lowest%20share%20at%201.6%25.) page links to census data which I downloaded. Turns out the downloaded data is kinda junk. It's only able to give me percentages by county. 
+- Gonna use the [AZ pop estimate from the 2020 Census](https://data.census.gov/profile/Arizona?g=040XX00US04) then convert the percentages by county to a number that I can then divide by total pop
+</code></pre>
+--- getting "freaky" also a bad idea:
+<pre><code>- For this we gotta get freaky too and use a combo of the voterfile and the census data. Gonna grab the immigrant registrants from the voterfile, then add the noncitizen pop to that -- might look at avging the two files idk
+</code></pre>
+</li>
+</ul>

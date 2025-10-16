@@ -1,0 +1,46 @@
+<h1 id="parsons-installation-notes">Parsons Installation Notes<a aria-hidden="true" class="anchor-heading icon-link" href="#parsons-installation-notes"></a></h1>
+<p>In this document, I will outline my experience installing <a title="Private" href="https://wiki.dendron.so/notes/hfyvYGJZQiUwQaaxQO27q.html" target="_blank" class="private">#parsons. (Private)</a> I’m not a software developer, but I’m motivated to learn and improve my technical skills. Most of my expertise lies in data analysis and visualization, particularly in SQL, and I'm improving my Python skills over time. Although I'm not yet fully comfortable with all the technical aspects of Parsons, I’m excited about the possibilities it offers and want to contribute to the project in the future.</p>
+<p>I’m following the official installation guide provided by Parsons: <a href="https://www.parsonsproject.org/pub/installation/release/10">Installation Guide</a>.</p>
+<h3 id="step-1-check-my-python-version">Step 1: Check my python version<a aria-hidden="true" class="anchor-heading icon-link" href="#step-1-check-my-python-version"></a></h3>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@Christinas-MacBook-Air ~ % python3 --version
+
+Python 3.13.1
+</code></pre>
+<p>According to the guide parsons needs 3.8 - 3.10. I will install a compatible version (3.10.13) using <strong>pyenv</strong>.</p>
+<p>Sophia Alice from the dev group recommended UV for package and dependency management, I may revisit this later</p>
+<ul>
+<li><a href="https://docs.astral.sh/uv/">UV docs</a></li>
+</ul>
+<h3 id="step-2-install-pyenv-for-version-management">Step 2: install pyenv for version management<a aria-hidden="true" class="anchor-heading icon-link" href="#step-2-install-pyenv-for-version-management"></a></h3>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@Christinas-MacBook-Air ~ % brew install pyenv
+</code></pre>
+<h3 id="step-3-install-python-31013">Step 3: Install Python 3.10.13<a aria-hidden="true" class="anchor-heading icon-link" href="#step-3-install-python-31013"></a></h3>
+<p>Using <strong>pyenv</strong>, I’ll install Python 3.10.13</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@Christinas-MacBook-Air ~ % pyenv install 3.10.13
+</code></pre>
+<h3 id="step-4-create-and-activate-a-virtual-environment">Step 4: Create and Activate a Virtual Environment<a aria-hidden="true" class="anchor-heading icon-link" href="#step-4-create-and-activate-a-virtual-environment"></a></h3>
+<p>Next, I’ll create a new virtual environment with Python 3.10.13 to keep the installation isolated</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@Christinas-MacBook-Air ~ % pyenv local 3.10.13
+cmarikos@Christinas-MacBook-Air ~ % python3.10 -m venv parsons_env
+cmarikos@Christinas-MacBook-Air ~ % source parsons_env/bin/activate
+
+(parsons_env) cmarikos@Christinas-MacBook-Air ~ %
+</code></pre>
+<p>The prompt should show the virtual environment is active <code>(parsons_env)</code></p>
+<h3 id="step-5-install-parsons">Step 5: Install Parsons<a aria-hidden="true" class="anchor-heading icon-link" href="#step-5-install-parsons"></a></h3>
+<p>With the virtual environment active, I can install <strong>Parsons</strong> using <strong>pip</strong></p>
+<pre class="language-zsh"><code class="language-zsh">(parsons_env) cmarikos@Christinas-MacBook-Air ~ % pip install parsons
+</code></pre>
+<h3 id="step-6-verify-the-installation">Step 6: Verify the Installation<a aria-hidden="true" class="anchor-heading icon-link" href="#step-6-verify-the-installation"></a></h3>
+<p>To verify that Parsons is installed correctly, I’ll create a simple Python script (<code>test.py</code>) that imports <strong>Parsons</strong> and prints a success message.</p>
+<p>I opened my parsons_env folder in VS code, and created a new test.py file</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> parsons <span class="token keyword">import</span> Table
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'You have successfully installed Parsons!'</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Run the script:</p>
+<pre class="language-zsh"><code class="language-zsh">(parsons_env) cmarikos@Christinas-MacBook-Air parsons_env % python test.py
+You have successfully installed Parsons!
+</code></pre>
+<h3 id="conclusion">Conclusion<a aria-hidden="true" class="anchor-heading icon-link" href="#conclusion"></a></h3>
+<p>The installation was relatively straightforward, and I didn’t encounter the errors I faced in previous attempts. The knowledge I gained from earlier experiences, especially regarding the <strong>Python version issue</strong>, was helpful. I also appreciated the clearer instructions in the installation guide this time. Overall, I’m pleased with the installation process and am excited to start using <strong>Parsons</strong> for my work.</p>

@@ -1,0 +1,471 @@
+<h1 id="organizing-dashboard-2025">Organizing Dashboard (2025)<a aria-hidden="true" class="anchor-heading icon-link" href="#organizing-dashboard-2025"></a></h1>
+<iframe width="600" height="450" src="https://lookerstudio.google.com/embed/reporting/a3f3129f-dc36-47b1-91a7-a04d938ec1c1/page/zLjcE" frameborder="0" style="border:0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+<p><a href="https://docs.google.com/spreadsheets/d/1VJ9Q_i2ehaiS3U7g_1ElCt-cZfryS9I0eccgqRl5XJg/edit?gid=242540621#gid=242540621">Connected sheet categorizing events by organizer - Extract 3</a></p>
+<h6 id="issue-tracker">Issue tracker<a aria-hidden="true" class="anchor-heading icon-link" href="#issue-tracker"></a></h6>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>03/03/2025</th><th>Engaged volunteers + super volunteers aren't displaying as they should</th></tr></thead><tbody><tr><td></td><td>- Resolution date</td></tr><tr><td>03/03/2025</td><td>No date control filter</td></tr><tr><td><strong>03/12/2025</strong></td><td>- Resolution date</td></tr></tbody></table></div>
+<ul>
+<li>engaged volunteers + super volunteers aren't grabbing people as they should (03/02/2025)</li>
+</ul>
+<p><strong>volunteershifts02182025</strong>_run1st -- volunteer shift meters, engaged and super volunteer lists
+This has to run before other tables</p>
+<hr>
+<pre class="language-sql"><code class="language-SQL"><span class="token identifier"><span class="token punctuation">`</span>CREATE OR REPLACE VIEW prod-organize-arizon-4e1c0a83.organizing_view.volunteershifts02182025 AS (<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Select the necessary columns from the event data and related tables<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>SELECT<span class="token punctuation">`</span></span> 
+    <span class="token identifier"><span class="token punctuation">`</span>e.eventid,                         -- Event ID<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>es.vanid,                          -- VAN ID 
+    <span class="token punctuation">`</span></span>e<span class="token punctuation">.</span>event_name<span class="token punctuation">,</span>                      <span class="token comment">-- Event name`</span>
+    <span class="token identifier"><span class="token punctuation">`</span>e.eventsignupid,                   -- Event signup ID<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>e.role,                            -- Role associated with the event<span class="token punctuation">`</span></span> attendee
+    <span class="token identifier"><span class="token punctuation">`</span>e.status,                          -- Status of the event<span class="token punctuation">`</span></span> attendee
+    <span class="token identifier"><span class="token punctuation">`</span>e.start_date,                      -- Start date of the event<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>e.end_date,                        -- End date of the event<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>EXTRACT(YEAR FROM e.end_date) AS year,  -- Extract the year from the end date<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ou.organizer                       -- Organizer of the event<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- From the enhanced events table<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>FROM proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events AS e<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Left join with event signups table based on the eventsignupid<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__eventsignups AS es<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ON e.eventsignupid = es.eventsignupid<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Left join with contacts table based on vanid
+  <span class="token punctuation">`</span></span><span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> proj<span class="token operator">-</span>tmc<span class="token operator">-</span>mem<span class="token operator">-</span>mvp<span class="token punctuation">.</span>everyaction_enhanced<span class="token punctuation">.</span>enh_everyaction__contacts <span class="token keyword">AS</span> ec<span class="token identifier"><span class="token punctuation">`</span>
+    <span class="token punctuation">`</span></span><span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> ec<span class="token punctuation">.</span>vanid<span class="token identifier"><span class="token punctuation">`</span>
+
+  <span class="token punctuation">`</span></span><span class="token comment">-- Left join with the organizing user events table a connected sheet I made based on event name`</span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN prod-organize-arizon-4e1c0a83.organizing_view.organizing_user_events AS ou<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ON e.event_name = ou.event_name<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Filter the results based on specific conditions<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>WHERE e.start_date >= '2025-01-01'  -- Include events starting from January 1, 2025<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>AND e.status = 'Completed'        -- Only include event attendees with a 'Completed' status<span class="token punctuation">`</span></span>
+
+<span class="token identifier"><span class="token punctuation">`</span>);<span class="token punctuation">`</span></span>
+</code></pre>
+<p><strong>organizinggoals02182025_run2nd</strong> -- creates ptg meters</p>
+<hr>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_goals02182025<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">WITH</span> a <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span>
+       organizer_user
+      <span class="token punctuation">,</span>EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> utc_datecanvassed<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+      <span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span>contacttypename<span class="token punctuation">)</span> <span class="token keyword">AS</span> phone_attempts
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.contacts_011325<span class="token punctuation">`</span></span>
+    <span class="token keyword">WHERE</span> contacttypename <span class="token operator">=</span> <span class="token string">'Phone'</span>
+      <span class="token operator">AND</span> utc_datecanvassed <span class="token operator">>=</span> <span class="token string">'2025-01-01 00:00:00 UTC'</span>
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> organizer_user<span class="token punctuation">,</span> <span class="token keyword">month</span>
+  <span class="token punctuation">)</span><span class="token punctuation">,</span>
+  b <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span>
+       organizer_user
+      <span class="token punctuation">,</span>EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> utc_datecanvassed<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+      <span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span>contacttypename<span class="token punctuation">)</span> <span class="token keyword">AS</span> phone_conversations
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.contacts_011325<span class="token punctuation">`</span></span>
+    <span class="token keyword">WHERE</span> contacttypename <span class="token operator">=</span> <span class="token string">'Phone'</span>
+      <span class="token operator">AND</span> utc_datecanvassed <span class="token operator">>=</span> <span class="token string">'2025-01-01 00:00:00 UTC'</span>
+      <span class="token operator">AND</span> resultshortname <span class="token operator">=</span> <span class="token string">'Canvassed'</span>
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> organizer_user<span class="token punctuation">,</span> <span class="token keyword">month</span>
+  <span class="token punctuation">)</span><span class="token punctuation">,</span>
+  c <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span>
+       organizer_user
+      <span class="token punctuation">,</span>EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> utc_datecanvassed<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+      <span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span>contacttypename<span class="token punctuation">)</span> <span class="token keyword">AS</span> one_on_ones
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.contacts_011325<span class="token punctuation">`</span></span>
+    <span class="token keyword">WHERE</span> contacttypename <span class="token operator">=</span> <span class="token string">'One on One'</span>
+      <span class="token operator">AND</span> utc_datecanvassed <span class="token operator">>=</span> <span class="token string">'2025-01-01 00:00:00 UTC'</span>
+      <span class="token operator">AND</span> resultshortname <span class="token operator">=</span> <span class="token string">'Canvassed'</span>
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> organizer_user<span class="token punctuation">,</span> <span class="token keyword">month</span>
+  <span class="token punctuation">)</span><span class="token punctuation">,</span>
+  d <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span>
+       organizer
+      <span class="token punctuation">,</span>EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> start_date<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+      <span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span>vanid<span class="token punctuation">)</span> <span class="token keyword">AS</span> volunteer_shifts
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.volunteershifts02182025<span class="token punctuation">`</span></span>
+    <span class="token keyword">WHERE</span> role <span class="token operator">=</span> <span class="token string">'Volunteer'</span>
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> organizer<span class="token punctuation">,</span> <span class="token keyword">month</span>
+  <span class="token punctuation">)</span><span class="token punctuation">,</span>
+  e <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span>
+       organizer
+      <span class="token punctuation">,</span>EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> start_date<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+      <span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> vanid<span class="token punctuation">)</span> <span class="token keyword">AS</span> volunteers
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.volunteershifts02182025<span class="token punctuation">`</span></span>
+    <span class="token keyword">WHERE</span> role <span class="token operator">=</span> <span class="token string">'Volunteer'</span>
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> organizer<span class="token punctuation">,</span> <span class="token keyword">month</span>
+  <span class="token punctuation">)</span>
+  <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+       a<span class="token punctuation">.</span>organizer_user
+      <span class="token punctuation">,</span>a<span class="token punctuation">.</span><span class="token keyword">month</span>
+      <span class="token punctuation">,</span>a<span class="token punctuation">.</span>phone_attempts
+      <span class="token punctuation">,</span>b<span class="token punctuation">.</span>phone_conversations
+      <span class="token punctuation">,</span>c<span class="token punctuation">.</span>one_on_ones
+      <span class="token punctuation">,</span>d<span class="token punctuation">.</span>volunteer_shifts
+      <span class="token punctuation">,</span>e<span class="token punctuation">.</span>volunteers
+  <span class="token keyword">FROM</span> a
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> b <span class="token keyword">ON</span> a<span class="token punctuation">.</span>organizer_user <span class="token operator">=</span> b<span class="token punctuation">.</span>organizer_user <span class="token operator">AND</span> a<span class="token punctuation">.</span><span class="token keyword">month</span> <span class="token operator">=</span> b<span class="token punctuation">.</span><span class="token keyword">month</span>
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> c <span class="token keyword">ON</span> a<span class="token punctuation">.</span>organizer_user <span class="token operator">=</span> c<span class="token punctuation">.</span>organizer_user <span class="token operator">AND</span> a<span class="token punctuation">.</span><span class="token keyword">month</span> <span class="token operator">=</span> c<span class="token punctuation">.</span><span class="token keyword">month</span>
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> d <span class="token keyword">ON</span> a<span class="token punctuation">.</span>organizer_user <span class="token operator">=</span> d<span class="token punctuation">.</span>organizer <span class="token operator">AND</span> a<span class="token punctuation">.</span><span class="token keyword">month</span> <span class="token operator">=</span> d<span class="token punctuation">.</span><span class="token keyword">month</span>
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> e <span class="token keyword">ON</span> a<span class="token punctuation">.</span>organizer_user <span class="token operator">=</span> e<span class="token punctuation">.</span>organizer <span class="token operator">AND</span> a<span class="token punctuation">.</span><span class="token keyword">month</span> <span class="token operator">=</span> e<span class="token punctuation">.</span><span class="token keyword">month</span>
+  <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> a<span class="token punctuation">.</span>organizer_user<span class="token punctuation">,</span> a<span class="token punctuation">.</span><span class="token keyword">month</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<p><strong>ea_hotlist_2025</strong> -- creates tables for hotlists engagement</p>
+<hr>
+<pre class="language-sql"><code class="language-SQL"><span class="token identifier"><span class="token punctuation">`</span>-- Create or replace the view for EA Hotlists in 2025<span class="token punctuation">`</span></span>
+<span class="token identifier"><span class="token punctuation">`</span>CREATE OR REPLACE VIEW prod-organize-arizon-4e1c0a83.organizing_view.ea_hotlists_2025 AS (<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Subquery to count the number of phone conversations for each VAN ID<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>WITH a AS (<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>SELECT<span class="token punctuation">`</span></span> 
+      <span class="token identifier"><span class="token punctuation">`</span>vanid,                             -- The VAN ID (unique identifier for a contact)<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>COUNT(contactscontactid) AS phone_conversations  -- Count the number of phone conversations<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>FROM proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__contactscontacts<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>WHERE contacttypename = 'Phone'        -- Filter for phone contacts<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>AND resultshortname = 'Canvassed'    -- Filter for 'Canvassed' result<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>AND utc_datecanvassed >= '2025-01-01 00:00:00 UTC'  -- Only include records from 2025 onward<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>GROUP BY vanid                         -- Group by VAN ID (each contact)<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ORDER BY phone_conversations DESC      -- Order by number of phone conversations in descending order<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>),<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Subquery to count the number of events attended for each VAN ID<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>b AS (<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>SELECT<span class="token punctuation">`</span></span> 
+      <span class="token identifier"><span class="token punctuation">`</span>vanid,                             -- The VAN ID (unique identifier for a contact)<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>COUNT(contactscontactid) AS events_attended  -- Count the number of events attended<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>FROM proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__contactscontacts<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>WHERE contacttypename = 'Event'       -- Filter for event contacts<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>AND resultshortname = 'Canvassed'    -- Filter for 'Canvassed' result<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>AND utc_datecanvassed >= '2025-01-01 00:00:00 UTC'  -- Only include records from 2025 onward<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>GROUP BY vanid                         -- Group by VAN ID (each contact)<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ORDER BY events_attended DESC          -- Order by number of events attended in descending order<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>),<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Subquery to count the number of one-on-one meetings for each VAN ID<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>c AS (<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>SELECT<span class="token punctuation">`</span></span> 
+      <span class="token identifier"><span class="token punctuation">`</span>vanid,                             -- The VAN ID (unique identifier for a contact)<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>COUNT(contactscontactid) AS one_on_ones  -- Count the number of one-on-one meetings<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>FROM proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__contactscontacts<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>WHERE contacttypename = 'One on One'  -- Filter for one-on-one contacts<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>AND resultshortname = 'Canvassed'   -- Filter for 'Canvassed' result<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>AND utc_datecanvassed >= '2025-01-01 00:00:00 UTC'  -- Only include records from 2025 onward<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>GROUP BY vanid                         -- Group by VAN ID (each contact)<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ORDER BY one_on_ones DESC              -- Order by number of one-on-ones in descending order<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>),<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Subquery to count the number of volunteer shifts for each VAN ID<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>d AS (<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>SELECT DISTINCT<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>vanid,                             -- The VAN ID (unique identifier for a contact)<span class="token punctuation">`</span></span>
+      <span class="token identifier"><span class="token punctuation">`</span>COUNT(role) AS volunteer_shifts    -- Count the number of volunteer shifts<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>FROM prod-organize-arizon-4e1c0a83.organizing_view.volunteershifts02182025<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>WHERE role = 'Volunteer'             -- Filter for volunteer roles<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>GROUP BY vanid                        -- Group by VAN ID (each contact)<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>)<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Final select combining all subqueries and additional information<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>SELECT DISTINCT<span class="token punctuation">`</span></span> 
+    <span class="token identifier"><span class="token punctuation">`</span>cc.vanid,                            -- The VAN ID from contacts table<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ec.first_name,                       -- The first name from contacts table<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ec.last_name,                        -- The last name from contacts table<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>sr.surveyresponsename,               -- Survey response name (e.g., 'Yes', 'No')<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>a.phone_conversations,               -- Number of phone conversations from subquery a<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>b.events_attended,                   -- Number of events attended from subquery b<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>c.one_on_ones,                       -- Number of one-on-one meetings from subquery c<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>d.volunteer_shifts                   -- Number of volunteer shifts from subquery d<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>FROM proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__contactscontacts AS cc<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Left join with survey responses to get survey data<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__survey_responses AS sr<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ON cc.contactscontactid = sr.contactscontactid<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Left join with contacts to get first and last name for each VAN ID<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__contacts AS ec<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>ON cc.vanid = ec.vanid<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Left joins with the subqueries (a, b, c, d) to get the various counts<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN a ON cc.vanid = a.vanid<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN b ON cc.vanid = b.vanid<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN c ON cc.vanid = c.vanid<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>LEFT JOIN d ON cc.vanid = d.vanid<span class="token punctuation">`</span></span>
+
+  <span class="token identifier"><span class="token punctuation">`</span>-- Filtering the final dataset to include only relevant survey responses<span class="token punctuation">`</span></span>
+  <span class="token identifier"><span class="token punctuation">`</span>WHERE<span class="token punctuation">`</span></span> 
+    <span class="token identifier"><span class="token punctuation">`</span>sr.surveyquestionname = 'Recruiting Organizer'  -- Only include responses for 'Recruiting Organizer'<span class="token punctuation">`</span></span>
+    <span class="token identifier"><span class="token punctuation">`</span>AND sr.surveyresponsename NOT IN ('No Organizer', 'Remove')  -- Exclude 'No Organizer' and 'Remove' responses<span class="token punctuation">`</span></span>
+
+<span class="token identifier"><span class="token punctuation">`</span>);<span class="token punctuation">`</span></span>
+
+</code></pre>
+<p>Organizing view contacts</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">create</span> <span class="token operator">or</span> <span class="token keyword">replace</span> <span class="token keyword">view</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.contacts_011325<span class="token punctuation">`</span></span> <span class="token keyword">as</span> <span class="token punctuation">(</span>
+
+  
+
+<span class="token keyword">select</span>
+
+cc<span class="token punctuation">.</span>vanid<span class="token punctuation">,</span>
+
+cc<span class="token punctuation">.</span>contacttypename<span class="token punctuation">,</span>
+
+cc<span class="token punctuation">.</span>resultshortname<span class="token punctuation">,</span>
+
+cc<span class="token punctuation">.</span>utc_datecanvassed<span class="token punctuation">,</span>
+
+extract<span class="token punctuation">(</span><span class="token keyword">year</span> <span class="token keyword">from</span> cc<span class="token punctuation">.</span>utc_datecanvassed<span class="token punctuation">)</span> <span class="token keyword">as</span> <span class="token keyword">year</span><span class="token punctuation">,</span>
+
+cc<span class="token punctuation">.</span>canvassedby<span class="token punctuation">,</span>
+
+u<span class="token punctuation">.</span>organizer_user
+
+  
+  
+
+<span class="token keyword">from</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__contactscontacts<span class="token punctuation">`</span></span> <span class="token keyword">as</span> cc
+
+  
+
+<span class="token keyword">left</span> <span class="token keyword">join</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__contacts<span class="token punctuation">`</span></span> <span class="token keyword">as</span> ec
+
+<span class="token keyword">on</span> cc<span class="token punctuation">.</span>vanid <span class="token operator">=</span> ec<span class="token punctuation">.</span>vanid
+
+  
+
+<span class="token keyword">left</span> <span class="token keyword">join</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.ea_publicuser_organizers<span class="token punctuation">`</span></span> <span class="token keyword">as</span> u
+
+<span class="token keyword">on</span> cc<span class="token punctuation">.</span>canvassedby <span class="token operator">=</span> u<span class="token punctuation">.</span>canvassedby
+
+  
+
+<span class="token keyword">where</span> cc<span class="token punctuation">.</span>contacttypename <span class="token operator">&#x3C;></span> <span class="token string">'No Actual Contact'</span>
+
+<span class="token punctuation">)</span>
+</code></pre>
+<p>Event tables + totals
+Query name: organizing_event_attendees</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.distinctevents011025<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">WITH</span> event_attendees <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+    e<span class="token punctuation">.</span>event_name<span class="token operator">||</span>e<span class="token punctuation">.</span>start_date <span class="token keyword">as</span> event_id
+    <span class="token punctuation">,</span> e<span class="token punctuation">.</span>role
+    <span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span>role<span class="token punctuation">)</span> <span class="token keyword">as</span> role_count
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> e
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span>
+    <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+  <span class="token punctuation">)</span>
+  <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+    
+    ou<span class="token punctuation">.</span>event_name
+    <span class="token punctuation">,</span> ou<span class="token punctuation">.</span>start_date
+    <span class="token punctuation">,</span> ou<span class="token punctuation">.</span>organizer
+    <span class="token punctuation">,</span> <span class="token keyword">CASE</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Elyanna Juarez'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Hector Castellanos'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Tara Clayton'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Jhanitzel Bogarin'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">IS</span> <span class="token boolean">NULL</span> <span class="token keyword">THEN</span> <span class="token string">'Virtual'</span>
+        <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+      <span class="token keyword">END</span> <span class="token keyword">AS</span> event_location
+    <span class="token punctuation">,</span> ae<span class="token punctuation">.</span>role
+    <span class="token punctuation">,</span> ae<span class="token punctuation">.</span>role_count
+
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_user_events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ou
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> event_attendees <span class="token keyword">AS</span> ae
+    <span class="token keyword">on</span> ou<span class="token punctuation">.</span>event_name<span class="token operator">||</span>ou<span class="token punctuation">.</span>start_date <span class="token operator">=</span> ae<span class="token punctuation">.</span>event_id
+
+  <span class="token keyword">WHERE</span> ou<span class="token punctuation">.</span>start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<p>Creates a table of event attendees, phone, event_role, events attended, count of events, and affiliated organizers</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.unique_attendee_volunteers<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">WITH</span> main_query <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">WITH</span> unique_attendees <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+      <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+        vanid
+        <span class="token punctuation">,</span> <span class="token string">'event_attendee'</span> <span class="token keyword">as</span> role
+      <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> 
+      <span class="token keyword">WHERE</span> start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+    <span class="token punctuation">)</span>
+
+
+    <span class="token keyword">SELECT</span> 
+      c<span class="token punctuation">.</span>first_name<span class="token operator">||</span><span class="token string">" "</span><span class="token operator">||</span>c<span class="token punctuation">.</span>last_name <span class="token keyword">AS</span> full_name
+      <span class="token punctuation">,</span> c<span class="token punctuation">.</span>phone_number
+      <span class="token punctuation">,</span> e<span class="token punctuation">.</span>vanid
+      <span class="token punctuation">,</span>a<span class="token punctuation">.</span>role
+      <span class="token punctuation">,</span> STRING_AGG<span class="token punctuation">(</span>CAST<span class="token punctuation">(</span>e<span class="token punctuation">.</span>event_name <span class="token keyword">AS</span> STRING<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">', '</span><span class="token punctuation">)</span> <span class="token keyword">as</span> agg_events
+      <span class="token punctuation">,</span> ARRAY_LENGTH<span class="token punctuation">(</span>SPLIT<span class="token punctuation">(</span>STRING_AGG<span class="token punctuation">(</span>CAST<span class="token punctuation">(</span>e<span class="token punctuation">.</span>event_name <span class="token keyword">AS</span> STRING<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> event_count
+
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span>  <span class="token keyword">AS</span> e
+
+    <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> unique_attendees <span class="token keyword">AS</span> a
+      <span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> a<span class="token punctuation">.</span>vanid
+
+    <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__contacts<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> c
+      <span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> c<span class="token punctuation">.</span>vanid
+
+    <span class="token keyword">WHERE</span> e<span class="token punctuation">.</span>start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">4</span>
+  <span class="token punctuation">)</span>
+
+  <span class="token keyword">SELECT</span> 
+    m<span class="token punctuation">.</span>full_name
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>phone_number
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>vanid
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>role
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>agg_events
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>event_count
+    <span class="token punctuation">,</span> <span class="token punctuation">(</span>
+        <span class="token keyword">SELECT</span> STRING_AGG<span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> oe<span class="token punctuation">.</span>organizer<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span>
+        <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_user_events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> oe
+        <span class="token keyword">WHERE</span> oe<span class="token punctuation">.</span>event_name <span class="token operator">IN</span> UNNEST<span class="token punctuation">(</span>SPLIT<span class="token punctuation">(</span>m<span class="token punctuation">.</span>agg_events<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+      <span class="token punctuation">)</span> <span class="token keyword">AS</span> agg_organizers
+  <span class="token keyword">FROM</span> main_query <span class="token keyword">AS</span> m
+<span class="token punctuation">)</span>
+</code></pre>
+<p>Added month for date filters to the two event queries above</p>
+<p>unique_attendee_volunteers</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.unique_attendee_volunteers<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">WITH</span> main_query <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">WITH</span> unique_attendees <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+      <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+        vanid
+        <span class="token punctuation">,</span> <span class="token string">'event_attendee'</span> <span class="token keyword">as</span> role
+      <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> 
+      <span class="token keyword">WHERE</span> start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+    <span class="token punctuation">)</span>
+
+
+    <span class="token keyword">SELECT</span> 
+      c<span class="token punctuation">.</span>first_name<span class="token operator">||</span><span class="token string">" "</span><span class="token operator">||</span>c<span class="token punctuation">.</span>last_name <span class="token keyword">AS</span> full_name
+      <span class="token punctuation">,</span> c<span class="token punctuation">.</span>phone_number
+      <span class="token punctuation">,</span> e<span class="token punctuation">.</span>vanid
+      <span class="token punctuation">,</span> a<span class="token punctuation">.</span>role
+      <span class="token punctuation">,</span> EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> e<span class="token punctuation">.</span>start_date<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+      <span class="token punctuation">,</span> STRING_AGG<span class="token punctuation">(</span>CAST<span class="token punctuation">(</span>e<span class="token punctuation">.</span>event_name <span class="token keyword">AS</span> STRING<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string">', '</span><span class="token punctuation">)</span> <span class="token keyword">as</span> agg_events
+      <span class="token punctuation">,</span> ARRAY_LENGTH<span class="token punctuation">(</span>SPLIT<span class="token punctuation">(</span>STRING_AGG<span class="token punctuation">(</span>CAST<span class="token punctuation">(</span>e<span class="token punctuation">.</span>event_name <span class="token keyword">AS</span> STRING<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> event_count
+
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span>  <span class="token keyword">AS</span> e
+
+    <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> unique_attendees <span class="token keyword">AS</span> a
+      <span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> a<span class="token punctuation">.</span>vanid
+
+    <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__contacts<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> c
+      <span class="token keyword">ON</span> e<span class="token punctuation">.</span>vanid <span class="token operator">=</span> c<span class="token punctuation">.</span>vanid
+
+    <span class="token keyword">WHERE</span> e<span class="token punctuation">.</span>start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> <span class="token number">5</span>
+  <span class="token punctuation">)</span>
+
+  <span class="token keyword">SELECT</span> 
+    m<span class="token punctuation">.</span><span class="token keyword">month</span>
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>full_name
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>phone_number
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>vanid
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>role
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>agg_events
+    <span class="token punctuation">,</span> m<span class="token punctuation">.</span>event_count
+    <span class="token punctuation">,</span> <span class="token punctuation">(</span>
+        <span class="token keyword">SELECT</span> STRING_AGG<span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> oe<span class="token punctuation">.</span>organizer<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span>
+        <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_user_events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> oe
+        <span class="token keyword">WHERE</span> oe<span class="token punctuation">.</span>event_name <span class="token operator">IN</span> UNNEST<span class="token punctuation">(</span>SPLIT<span class="token punctuation">(</span>m<span class="token punctuation">.</span>agg_events<span class="token punctuation">,</span> <span class="token string">', '</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+      <span class="token punctuation">)</span> <span class="token keyword">AS</span> agg_organizers
+  <span class="token keyword">FROM</span> main_query <span class="token keyword">AS</span> m
+<span class="token punctuation">)</span>
+
+</code></pre>
+<p>organizing event attendees</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_event_attendees<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">WITH</span> event_attendees <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+    e<span class="token punctuation">.</span>event_name<span class="token operator">||</span>e<span class="token punctuation">.</span>start_date <span class="token keyword">as</span> event_id
+    <span class="token punctuation">,</span> e<span class="token punctuation">.</span>role
+    <span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>e<span class="token punctuation">.</span>role<span class="token punctuation">)</span> <span class="token keyword">as</span> role_count
+    <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> e
+    <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span>
+    <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+  <span class="token punctuation">)</span>
+  <span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+    
+    ou<span class="token punctuation">.</span>event_name
+    <span class="token punctuation">,</span> ou<span class="token punctuation">.</span>start_date
+    <span class="token punctuation">,</span> EXTRACT<span class="token punctuation">(</span><span class="token keyword">MONTH</span> <span class="token keyword">FROM</span> ou<span class="token punctuation">.</span>start_date<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">month</span>
+    <span class="token punctuation">,</span> ou<span class="token punctuation">.</span>organizer
+    <span class="token punctuation">,</span> <span class="token keyword">CASE</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Elyanna Juarez'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Hector Castellanos'</span> <span class="token keyword">THEN</span> <span class="token string">'Pinal'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Tara Clayton'</span> <span class="token keyword">THEN</span> <span class="token string">'Cochise'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">=</span> <span class="token string">'Jhanitzel Bogarin'</span> <span class="token keyword">THEN</span> <span class="token string">'Yuma'</span>
+        <span class="token keyword">WHEN</span> ou<span class="token punctuation">.</span>organizer <span class="token operator">IS</span> <span class="token boolean">NULL</span> <span class="token keyword">THEN</span> <span class="token string">'Virtual'</span>
+        <span class="token keyword">ELSE</span> <span class="token boolean">NULL</span>
+      <span class="token keyword">END</span> <span class="token keyword">AS</span> event_location
+    <span class="token punctuation">,</span> ae<span class="token punctuation">.</span>role
+    <span class="token punctuation">,</span> ae<span class="token punctuation">.</span>role_count
+
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.organizing_view.organizing_user_events<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> ou
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> event_attendees <span class="token keyword">AS</span> ae
+    <span class="token keyword">on</span> ou<span class="token punctuation">.</span>event_name<span class="token operator">||</span>ou<span class="token punctuation">.</span>start_date <span class="token operator">=</span> ae<span class="token punctuation">.</span>event_id
+
+  <span class="token keyword">WHERE</span> ou<span class="token punctuation">.</span>start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<p>hotlist code - using activist codes in EA</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">WITH</span> hotlists <span class="token keyword">AS</span><span class="token punctuation">(</span>
+  <span class="token keyword">SELECT</span> 
+    c<span class="token punctuation">.</span>firstname
+    <span class="token punctuation">,</span> c<span class="token punctuation">.</span>lastname
+    <span class="token punctuation">,</span> a<span class="token punctuation">.</span>activistcodename
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__activist_codes<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> a
+
+  <span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_cleaned.cln_everyaction__contacts<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> c
+    <span class="token keyword">ON</span> a<span class="token punctuation">.</span>vanid <span class="token operator">=</span> c<span class="token punctuation">.</span>vanid
+
+  <span class="token keyword">WHERE</span> activistcodename <span class="token operator">LIKE</span> <span class="token string">'%Hotlist'</span>
+<span class="token punctuation">)</span>
+
+<span class="token punctuation">,</span> role_counts <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+  <span class="token keyword">SELECT</span>
+    vanid<span class="token punctuation">,</span>
+    role<span class="token punctuation">,</span>
+    <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> role_count
+  <span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>proj-tmc-mem-mvp.everyaction_enhanced.enh_everyaction__events<span class="token punctuation">`</span></span> 
+  <span class="token keyword">WHERE</span> start_date <span class="token operator">></span> <span class="token string">'2024-12-31'</span>
+    <span class="token operator">AND</span> final_status <span class="token operator">=</span> <span class="token string">'Completed'</span>
+  <span class="token keyword">GROUP</span> <span class="token keyword">BY</span> vanid<span class="token punctuation">,</span> role
+<span class="token punctuation">)</span>
+<span class="token keyword">SELECT</span>
+
+<span class="token keyword">FROM</span> role_counts <span class="token keyword">AS</span> r
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> hotlist <span class="token keyword">AS</span> h
+</code></pre>

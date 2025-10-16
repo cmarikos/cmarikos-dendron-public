@@ -1,0 +1,22 @@
+<h1 id="long-to-wide-file-join">Long to Wide File Join<a aria-hidden="true" class="anchor-heading icon-link" href="#long-to-wide-file-join"></a></h1>
+<p>I have the RAZA IDs in long format and need to convert to wide format for QGIS, so I can get one row per precinct.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+
+<span class="token comment"># Read the CSV</span>
+df <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'Candidate_Issue_IDS - Extract 1 (1).csv'</span><span class="token punctuation">)</span> 
+
+<span class="token comment"># Pivot the data so that each precinct becomes one row and IDs become columns</span>
+wide_df <span class="token operator">=</span> df<span class="token punctuation">.</span>pivot_table<span class="token punctuation">(</span>
+    index<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GEOMETRY'</span><span class="token punctuation">,</span> <span class="token string">'COUNTY'</span><span class="token punctuation">,</span> <span class="token string">'PRECINCTNA'</span><span class="token punctuation">,</span><span class="token string">'precinctname'</span><span class="token punctuation">,</span> <span class="token string">'PCTNUM'</span><span class="token punctuation">,</span> <span class="token string">'LEGISLATIV'</span><span class="token punctuation">,</span> <span class="token string">'CONGRESSIO'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    columns<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'SurveyQuestionName'</span><span class="token punctuation">,</span> <span class="token string">'SurveyResponseName'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+    values<span class="token operator">=</span><span class="token string">'response_count'</span><span class="token punctuation">,</span>
+    aggfunc<span class="token operator">=</span><span class="token string">'sum'</span>
+<span class="token punctuation">)</span><span class="token punctuation">.</span>reset_index<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Optionally, flatten the MultiIndex columns if desired</span>
+wide_df<span class="token punctuation">.</span>columns <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'_'</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token builtin">str</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span> <span class="token keyword">for</span> c <span class="token keyword">in</span> col <span class="token keyword">if</span> c<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token string">'_'</span><span class="token punctuation">)</span> <span class="token keyword">for</span> col <span class="token keyword">in</span> wide_df<span class="token punctuation">.</span>columns<span class="token punctuation">.</span>values<span class="token punctuation">]</span>
+
+<span class="token comment"># Save the wide format to a new CSV file</span>
+wide_df<span class="token punctuation">.</span>to_csv<span class="token punctuation">(</span><span class="token string">'wide_ids2.csv'</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+</code></pre>

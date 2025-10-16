@@ -1,0 +1,106 @@
+<h1 id="vr-and-voter-file-missingness">Vr and Voter File Missingness<a aria-hidden="true" class="anchor-heading icon-link" href="#vr-and-voter-file-missingness"></a></h1>
+<p>In 2024 RAZE registered 5,352 voters</p>
+<p>Query here:</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span> 
+  <span class="token function">COUNT</span><span class="token punctuation">(</span>Voter_File_VANID<span class="token punctuation">)</span> 
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.RAZE_2024<span class="token punctuation">`</span></span> 
+</code></pre>
+<p>When we match to the Targetsmart file, we lose 1,422 people, and come out with a total of 3,930 registered voters that we can find.</p>
+<p>Here is a query to decipher 2024 general election vote history</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span>  
+  <span class="token keyword">CASE</span>
+      <span class="token keyword">WHEN</span> vhsyn_vf_g2024_synthetic <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'A'</span><span class="token punctuation">,</span><span class="token string">'E'</span><span class="token punctuation">,</span><span class="token string">'Y'</span><span class="token punctuation">)</span> <span class="token keyword">THEN</span> <span class="token string">'Voted'</span>
+      <span class="token keyword">ELSE</span> <span class="token string">'Did not vote'</span>
+    <span class="token keyword">END</span> <span class="token keyword">AS</span> vote_history
+  <span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> voter_count
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.RAZE_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vr
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+  <span class="token keyword">ON</span> vr<span class="token punctuation">.</span>Voter_File_VANID <span class="token operator">=</span> vb<span class="token punctuation">.</span>vb_smartvan_id
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.vote_history_synthetics_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vh
+  <span class="token keyword">ON</span> vb<span class="token punctuation">.</span>voterbase_id <span class="token operator">=</span> vh<span class="token punctuation">.</span>voterbase_id
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+</code></pre>
+<p>Results:</p>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>vote_history</th><th>voter_count</th></tr></thead><tbody><tr><td>Did not vote</td><td>2014</td></tr><tr><td>Voted</td><td>1916</td></tr></tbody></table></div>
+<p>Doing a quick/rough tsmr_race breakdown</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span>  
+  vb<span class="token punctuation">.</span>ts_tsmr_race
+  <span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> voter_count
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.viewers_dataset.RAZE_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vr
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+  <span class="token keyword">ON</span> vr<span class="token punctuation">.</span>Voter_File_VANID <span class="token operator">=</span> vb<span class="token punctuation">.</span>vb_smartvan_id
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.vote_history_synthetics_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vh
+  <span class="token keyword">ON</span> vb<span class="token punctuation">.</span>voterbase_id <span class="token operator">=</span> vh<span class="token punctuation">.</span>voterbase_id
+
+<span class="token keyword">WHERE</span> vb<span class="token punctuation">.</span>ts_tsmr_race <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+</code></pre>
+<div class="table-responsive">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>ts_tsmr_race</th><th>voter_count</th></tr></thead><tbody><tr><td>N</td><td>13</td></tr><tr><td>H</td><td>2748</td></tr><tr><td>W</td><td>1072</td></tr><tr><td>B</td><td>72</td></tr><tr><td>A</td><td>14</td></tr><tr><td>U</td><td>11</td></tr></tbody></table></div>
+<p>Wondering if we're running into the voter missingness reported by Miriam in the following. Would love to dive deeper. It would be helpful to know if there is missingness vs purges/people not successfully getting registered -- how to investigate this?</p>
+<p></p><blockquote>
+No note with name Surfacing Missing Voters 2.12.24.pdf found in cache during parsing.
+</blockquote><p></p>
+<p>Clarification from Hal on the match issue
+"So the issues with the Blocks to VAN sync is that it goes through two points of transfer as well.Once the OCR digitizes the forms, it goes back into blocks then State Voices would send a blocks file to VVN who is the only org nationwide who can bulk apply ACs via API to the VRT, then from the VRT it matches over to MyV via those codes we make every year, so that’s the last two kind of drop off points.So a couple things could be happening:  </p>
+<ol>
+<li>Yes, voters may not have made it all the way into the voter file, our coalition averages about an 80% match rate</li>
+<li>if you’re pulling based on those activists codes Folks could have dropped off.  What we could do is take your blocks list and have TargetSmart match via their voter base ID and bulk upload those people and retag them with the activist code</li>
+</ol>
+<p>Hal Boyles</p>
+<p>So it’s likely a combo of those two things rather than one option being solely responsible for that large of a percent of the blocks list"</p>

@@ -1,0 +1,51 @@
+<h1 id="giant-merged-file-issues-log">Giant Merged File Issues Log<a aria-hidden="true" class="anchor-heading icon-link" href="#giant-merged-file-issues-log"></a></h1>
+<p>Star date 04/14/2025</p>
+<ul>
+<li>Currently Rich cannot use the giant merged file I gave him because it (predictably) has way too many columns to open anywhere. Going to make a merge script that gives me all of my column names in an output csv so I can work with all 500+ of them manually in a google sheet where I can see best which ones I wanna delete. Then, I'll reconvert that to a column list and write script to keep only the columns in that list.</li>
+</ul>
+<h6 id="merge--column-list-script">merge + column list script<a aria-hidden="true" class="anchor-heading icon-link" href="#merge--column-list-script"></a></h6>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+<span class="token keyword">import</span> csv
+
+df1 <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'filtered_mapfiles.csv'</span><span class="token punctuation">)</span>
+df2 <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'cleaned_results_2024_modified_precincts.csv'</span><span class="token punctuation">)</span>
+
+
+pctnum <span class="token operator">=</span> <span class="token string">'pctnum'</span>
+
+merged_df <span class="token operator">=</span> pd<span class="token punctuation">.</span>merge<span class="token punctuation">(</span>df1<span class="token punctuation">,</span> df2<span class="token punctuation">,</span> on<span class="token operator">=</span>pctnum<span class="token punctuation">,</span> how<span class="token operator">=</span><span class="token string">'outer'</span><span class="token punctuation">)</span>
+
+<span class="token comment">#convert any numeric values from strings for qgis</span>
+merged_df <span class="token operator">=</span> merged_df<span class="token punctuation">.</span><span class="token builtin">apply</span><span class="token punctuation">(</span><span class="token keyword">lambda</span> col<span class="token punctuation">:</span> pd<span class="token punctuation">.</span>to_numeric<span class="token punctuation">(</span>col<span class="token punctuation">,</span> errors<span class="token operator">=</span><span class="token string">'ignore'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Save the final merged DataFrame to a new CSV file</span>
+merged_df<span class="token punctuation">.</span>to_csv<span class="token punctuation">(</span><span class="token string">'merged_mapfiles_raza.csv'</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+column_list <span class="token operator">=</span> merged_df<span class="token punctuation">.</span>columns<span class="token punctuation">.</span>tolist<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Comment out all of this to just merge the files</span>
+<span class="token comment"># Open a new CSV file for writing</span>
+<span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"output.csv"</span><span class="token punctuation">,</span> <span class="token string">"w"</span><span class="token punctuation">,</span> newline<span class="token operator">=</span><span class="token string">""</span><span class="token punctuation">)</span> <span class="token keyword">as</span> csvfile<span class="token punctuation">:</span>
+    writer <span class="token operator">=</span> csv<span class="token punctuation">.</span>writer<span class="token punctuation">(</span>csvfile<span class="token punctuation">)</span>
+    
+    <span class="token comment"># Write header (optional)</span>
+    writer<span class="token punctuation">.</span>writerow<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">"Column Name"</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+    
+    <span class="token comment"># Write each item as a new row (each in one column)</span>
+    <span class="token keyword">for</span> item <span class="token keyword">in</span> column_list<span class="token punctuation">:</span>
+        writer<span class="token punctuation">.</span>writerow<span class="token punctuation">(</span><span class="token punctuation">[</span>item<span class="token punctuation">]</span><span class="token punctuation">)</span>
+        
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"CSV file created successfully as output.csv"</span><span class="token punctuation">)</span>
+</code></pre>
+<p><a href="https://docs.google.com/spreadsheets/d/1sj8dgKm0C6LsUs7qqTR18htDsBVoEko9CNIw8uo4vX8/edit?gid=1954200069#gid=1954200069">Here is the column list google sheet</a></p>
+<ul>
+<li>There are 565 columns, kill me</li>
+</ul>
+<p>Here is the shortened list</p>
+<ul>
+<li>I still have 336 columns, that's too many probably but let's try it
+<blockquote>
+No note with name merge file column list - filtered_columns 1.csv found in cache during parsing.
+</blockquote></li>
+</ul>
+<p>Now I have to write a script that will use this list to keep only these columns in my merged file</p>

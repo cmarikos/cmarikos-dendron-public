@@ -1,0 +1,107 @@
+{
+  "notes": {
+    "403": {
+      "vault": {
+        "fsPath": ".",
+        "selfContained": true,
+        "name": "Dendron"
+      },
+      "fname": "403",
+      "id": "403",
+      "title": "This page has not yet sprouted",
+      "schemaStub": false,
+      "type": "note",
+      "updated": 1760646751656,
+      "created": 1760646751656,
+      "desc": "",
+      "links": [],
+      "anchors": {},
+      "children": [],
+      "parent": null,
+      "data": {}
+    },
+    "yxkfnaxvirvm4cfx78t2sf2": {
+      "id": "yxkfnaxvirvm4cfx78t2sf2",
+      "title": "Public",
+      "desc": "",
+      "updated": 1760645666258,
+      "created": 1760645666258,
+      "custom": {
+        "nav_order": 0,
+        "permalink": "/"
+      },
+      "fname": "Public",
+      "type": "note",
+      "vault": {
+        "fsPath": ".",
+        "selfContained": true,
+        "name": "Dendron"
+      },
+      "contentHash": "83ed5144fafbe22a37193c4a402a8a0f",
+      "links": [],
+      "anchors": {},
+      "children": [],
+      "parent": null,
+      "data": {}
+    }
+  },
+  "domains": [
+    {
+      "id": "yxkfnaxvirvm4cfx78t2sf2",
+      "title": "Public",
+      "desc": "",
+      "updated": 1760645666258,
+      "created": 1760645666258,
+      "custom": {
+        "nav_order": 0,
+        "permalink": "/"
+      },
+      "fname": "Public",
+      "type": "note",
+      "vault": {
+        "fsPath": ".",
+        "selfContained": true,
+        "name": "Dendron"
+      },
+      "contentHash": "83ed5144fafbe22a37193c4a402a8a0f",
+      "links": [],
+      "anchors": {},
+      "children": [],
+      "parent": null,
+      "data": {},
+      "body": ""
+    }
+  ],
+  "noteIndex": {
+    "id": "yxkfnaxvirvm4cfx78t2sf2",
+    "title": "Public",
+    "desc": "",
+    "updated": 1760645666258,
+    "created": 1760645666258,
+    "custom": {
+      "nav_order": 0,
+      "permalink": "/"
+    },
+    "fname": "Public",
+    "type": "note",
+    "vault": {
+      "fsPath": ".",
+      "selfContained": true,
+      "name": "Dendron"
+    },
+    "contentHash": "83ed5144fafbe22a37193c4a402a8a0f",
+    "links": [],
+    "anchors": {},
+    "children": [],
+    "parent": null,
+    "data": {},
+    "body": ""
+  },
+  "vaults": [
+    {
+      "fsPath": ".",
+      "selfContained": true,
+      "name": "Dendron"
+    }
+  ]
+}

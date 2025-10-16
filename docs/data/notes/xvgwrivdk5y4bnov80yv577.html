@@ -1,0 +1,282 @@
+<h1 id="cvap---voterfile-analysis">Cvap   Voterfile Analysis<a aria-hidden="true" class="anchor-heading icon-link" href="#cvap---voterfile-analysis"></a></h1>
+<p>I want to be able to do geospatial analysis to compare CVAP data to the targetsmart voterfile</p>
+<p>This is my starting point </p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
+	pn<span class="token punctuation">.</span>pctnum
+	<span class="token punctuation">,</span> vb<span class="token punctuation">.</span>vb_tsmart_place
+	<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> <span class="token keyword">as</span> tsmart_voters
+<span class="token comment">-- this is the targetsmart voterfile</span>
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+
+<span class="token comment">-- this is a crosswalk I made to convert the census geoid for place to match the vb_tsmart_place codes</span>
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.place_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pl
+	<span class="token keyword">ON</span> vb<span class="token punctuation">.</span>vb_tsmart_place <span class="token operator">=</span> pl<span class="token punctuation">.</span>place_id
+
+<span class="token comment">-- this is the cvap table with place</span>
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.cvap_2019_4yr_place<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cv
+	<span class="token keyword">ON</span> cv<span class="token punctuation">.</span>geoid <span class="token operator">=</span> pl<span class="token punctuation">.</span>geoid
+
+<span class="token comment">-- this is a crosswalk I made to covert AZ precinct codes into a less annoying format so I can have consistency across VAN/voterfile types</span>
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.targetsmart_pctnum_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pn
+	<span class="token keyword">ON</span> vb<span class="token punctuation">.</span>vb_tsmart_precinct_name <span class="token operator">=</span> pn<span class="token punctuation">.</span>vb_vf_precinct_name
+
+<span class="token keyword">WHERE</span>
+	vb<span class="token punctuation">.</span>vb_tsmart_state <span class="token operator">=</span> <span class="token string">'AZ'</span>
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">2</span>
+</code></pre>
+<p>With this I immediately notice that place boundaries cross precinct boundaries, like a lot</p>
+<p>Next, I'm gonna do geospatial analysis with SQL. To do this I need a census place shapefile found <a href="https://www.census.gov/cgi-bin/geo/shapefiles/index.php?year=2024&#x26;layergroup=Places">here</a>, and converted with the process detailed <a href="/obsidian://open?vault=Work&#x26;file=Projects%2FMaps%20in%20Looker%20-%20File%20Conversion%20Guide">here</a></p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">WITH</span> spatial_alloc <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span>
+		pg<span class="token punctuation">.</span>PCTNUM<span class="token punctuation">,</span>
+		ARRAY_AGG<span class="token punctuation">(</span>STRUCT<span class="token punctuation">(</span>
+			cg<span class="token punctuation">.</span>GEOID<span class="token punctuation">,</span>
+			ST_AREA<span class="token punctuation">(</span>ST_INTERSECTION<span class="token punctuation">(</span>pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">,</span> cg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> intersect_area<span class="token punctuation">,</span>
+			ST_AREA<span class="token punctuation">(</span>ST_INTERSECTION<span class="token punctuation">(</span>pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">,</span> cg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">/</span> ST_AREA<span class="token punctuation">(</span>pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> overlap_fraction
+		<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">AS</span> overlaps
+		
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pg
+	
+	<span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2024_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cg
+		<span class="token keyword">ON</span> ST_INTERSECTS<span class="token punctuation">(</span>pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">,</span> cg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span><span class="token punctuation">)</span>
+	<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> pg<span class="token punctuation">.</span>PCTNUM
+<span class="token punctuation">)</span><span class="token punctuation">,</span>  
+
+allocated_census <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span>
+		sa<span class="token punctuation">.</span>PCTNUM<span class="token punctuation">,</span>
+		<span class="token function">SUM</span><span class="token punctuation">(</span><span class="token keyword">COALESCE</span><span class="token punctuation">(</span>cv<span class="token punctuation">.</span>cvap_est<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">*</span> ov<span class="token punctuation">.</span>overlap_fraction<span class="token punctuation">)</span> <span class="token keyword">AS</span> allocated_census_population
+		
+	<span class="token keyword">FROM</span> spatial_alloc <span class="token keyword">AS</span> sa
+	
+	<span class="token keyword">CROSS</span> <span class="token keyword">JOIN</span> UNNEST<span class="token punctuation">(</span>sa<span class="token punctuation">.</span>overlaps<span class="token punctuation">)</span> <span class="token keyword">AS</span> ov
+	
+	<span class="token comment">-- this was a pain in the butt to figure out, casting in the join works</span>
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.place_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+		<span class="token keyword">ON</span> CAST<span class="token punctuation">(</span>ov<span class="token punctuation">.</span>GEOID <span class="token keyword">AS</span> INT64<span class="token punctuation">)</span> <span class="token operator">=</span> CAST<span class="token punctuation">(</span>cw<span class="token punctuation">.</span>place_id <span class="token keyword">AS</span> INT64<span class="token punctuation">)</span>
+	
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.cvap_2019_4yr_place<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cv
+		<span class="token keyword">ON</span> cw<span class="token punctuation">.</span>geoid <span class="token operator">=</span> cv<span class="token punctuation">.</span>geoid
+	<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span><span class="token punctuation">,</span>
+
+voter_counts <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span>
+		pn<span class="token punctuation">.</span>pctnum<span class="token punctuation">,</span>
+		<span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> vb<span class="token punctuation">.</span>voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> registered_voters
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.targetsmart_pctnum_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pn
+	
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> vb
+		<span class="token keyword">ON</span> pn<span class="token punctuation">.</span>vb_vf_precinct_name <span class="token operator">=</span> vb<span class="token punctuation">.</span>vb_vf_precinct_name
+	
+	<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> pn<span class="token punctuation">.</span>pctnum
+<span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span>
+	vc<span class="token punctuation">.</span>pctnum<span class="token punctuation">,</span>
+	vc<span class="token punctuation">.</span>registered_voters<span class="token punctuation">,</span>
+	ac<span class="token punctuation">.</span>allocated_census_population
+
+<span class="token keyword">FROM</span> voter_counts <span class="token keyword">AS</span> vc
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> allocated_census <span class="token keyword">AS</span> ac
+	<span class="token keyword">ON</span> vc<span class="token punctuation">.</span>pctnum <span class="token operator">=</span> ac<span class="token punctuation">.</span>PCTNUM<span class="token punctuation">;</span>
+</code></pre>
+<p>The current issue with this is that I assumed that census place geometry areas were always smaller in area to AZ precincts, they vary wildly and this is often not the case. We can't just make place geometry the denominator of our overlap_fraction on line 7, because it's also true that census place geometries are often smaller than precinct geometries. I'm ripping my hair our on how to move forward, and I'm hungry, so this is where I stop for the evening.</p>
+<p>Re-evaluating my choices here on day two. I think there are two possible solutions:</p>
+<ol>
+<li>This is not a problem SQL is suited for, and I should do it in python then re-import to BigQuery (or maybe try out the BQ python notebooks?)</li>
+<li>I should either forget about precincts entirely and go by block group, or try to find a geographic boundary smaller than all of the precincts in AZ. Maybe block? I'll try this one first because god forbid I learn something new when I don't have to. My issue with using place is that my TigerLine shapefile may or may not be good. I think it has way too many points for looker to manage even if I could subdivide by county (it totally doesn't have a county field to divide by ): )</li>
+<li>Miriam from Columbia/DPI wants to meet, but I have to have something more substantial to show her before I go crying for help</li>
+<li>Just also got a call back from the census bureau-- who despite the layoffs and political bullshit have time to answer voicemails from citizens like me because they are worth their weight in gold-- with clarification that there are no precinct based CVAP results in the ACS. Precinct/voting district based results are only collected each decennial census and are stored in the category of redistricting. Miriam also suggested checking the AZ redistricting website, so that's a thread to pull. That said, the last census was a whole presidential administration ago, it's hard to make arguments about getting funding for a program based on data that will not represent the last four cycles of program work.
+<ol>
+<li>The nice census man also pointed out something that I overlooked. I'm only getting some of the place boundaries in my shapefile because I'm using 2024, not 2023 (the final year of my CVAP data). Not every place is surveyed every year. Gotta upload the 2023 place shapefile.</li>
+</ol>
+</li>
+</ol>
+<p>One more Hail Mary on the precinct spatial analysis though, because I just found something interesting. When I join the cvap data with the tl shapefile (the unformatted one before I hacked off all the fields I thought I didn't need in geo-formatting it), I see intplat-intplong pairs on the end that I could try to use to drop the place data into specific precincts?</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
+p<span class="token punctuation">.</span><span class="token operator">*</span><span class="token punctuation">,</span>
+cg<span class="token punctuation">.</span><span class="token operator">*</span>
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.cvap_2019_4yr_place<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.place_crosswalk<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cw
+	<span class="token keyword">ON</span> p<span class="token punctuation">.</span>geoid <span class="token operator">=</span> cw<span class="token punctuation">.</span>geoid
+
+<span class="token keyword">INNER</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cg
+	<span class="token keyword">ON</span> CAST<span class="token punctuation">(</span>cw<span class="token punctuation">.</span>place_id <span class="token keyword">as</span> INT64<span class="token punctuation">)</span> <span class="token operator">=</span> cg<span class="token punctuation">.</span>GEOID
+</code></pre>
+<p>Next steps:</p>
+<ol>
+<li>Upload the 2023 shapefile, </li>
+<li>Geoformat <em>without</em> chopping off a bunch of fields </li>
+<li>Try doing a spatial join again and see if it looks less insane</li>
+</ol>
+<p>Also just gonna pop some info here for comparison:
+<a href="https://docs.google.com/spreadsheets/d/1PvZONQhsjHb8cqjhZi1DTg9RRlVR7wB7tUknlGxD3S4/edit?usp=sharing">This breaks down national average of CVAP population vs voter registration</a>, so basically anything around 50-60% would make me unsuspicious, too far below, and especially too far above would be a sign that I'm fuckin up.</p>
+<p>Back to GDAL with my shiny new 2023 shapefile.</p>
+<pre class="language-zsh"><code class="language-zsh">geoenvcmarikos@MacBookAir geoenv % ogr2ogr -f "CSV" census_place_2023.csv "tl_2023_04_place.shp" -lco GEOMETRY=AS_WKT
+</code></pre>
+<p>Now I'm uploading to BigQuery again, but this time I'm not dropping all my "unnecessary" columns like a dummy. Also gonna fix the 2024 file in case I need it again.</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2023_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span><span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span>
+		ST_GEOGFROMTEXT<span class="token punctuation">(</span>WKT<span class="token punctuation">)</span> <span class="token keyword">AS</span> <span class="token keyword">GEOMETRY</span>
+		<span class="token punctuation">,</span><span class="token operator">*</span>
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2023<span class="token punctuation">`</span></span>
+<span class="token punctuation">)</span>
+</code></pre>
+<p>Looking over the place map for 2023, I should really just do this analysis by place, it would be silly to do anything else. I can left join in my registered voters by place to only get places surveyed.</p>
+<p>Hahaha! I have a new problem. Kill me.</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">WITH</span> registered_voters <span class="token keyword">AS</span><span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span>
+		vb_tsmart_place <span class="token keyword">as</span> geoid
+		<span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> registered_voters
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span>
+	
+	<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+  
+
+<span class="token keyword">SELECT</span>
+	p<span class="token punctuation">.</span><span class="token operator">*</span>
+	<span class="token punctuation">,</span> rv<span class="token punctuation">.</span>registered_voters
+	<span class="token punctuation">,</span> cv<span class="token punctuation">.</span>cvap_est 
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2023_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> registered_voters <span class="token keyword">AS</span> rv
+	<span class="token keyword">ON</span> p<span class="token punctuation">.</span>GEOID <span class="token operator">=</span> CAST<span class="token punctuation">(</span>rv<span class="token punctuation">.</span>geoid <span class="token keyword">AS</span> INT64<span class="token punctuation">)</span>
+ 
+<span class="token comment">-- dear reader, please know that this is a 5yr ACS report, and I just can't count, so I named it incorrectly</span>
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.cvap_2019_4yr_place<span class="token punctuation">`</span></span> <span class="token keyword">as</span> cv
+	<span class="token keyword">ON</span> p<span class="token punctuation">.</span>GEOIDFQ <span class="token operator">=</span> cv<span class="token punctuation">.</span>geoid
+</code></pre>
+<p>Dumb mistake, I forgot that there are different categories in the CVAP data, I was getting multiple rows with duplicate place results because I have demographic breakdown CVAP columns.</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">WITH</span> registered_voters <span class="token keyword">AS</span><span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+		vb_tsmart_place <span class="token keyword">as</span> geoid
+		<span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> registered_voters
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span>
+	
+	<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+
+<span class="token keyword">SELECT</span>
+	p<span class="token punctuation">.</span><span class="token operator">*</span>
+	<span class="token punctuation">,</span> rv<span class="token punctuation">.</span>registered_voters
+	<span class="token punctuation">,</span> cv<span class="token punctuation">.</span>cvap_est
+	<span class="token punctuation">,</span> cv<span class="token punctuation">.</span>cvap_moe
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2023_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p  
+
+<span class="token comment">-- switched these to inner joins to get no nulls, idk dude</span>
+<span class="token keyword">INNER</span> <span class="token keyword">JOIN</span> registered_voters <span class="token keyword">AS</span> rv
+	<span class="token keyword">ON</span> p<span class="token punctuation">.</span>GEOID <span class="token operator">=</span> CAST<span class="token punctuation">(</span>rv<span class="token punctuation">.</span>geoid <span class="token keyword">AS</span> INT64<span class="token punctuation">)</span>
+
+<span class="token keyword">INNER</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.cvap_2019_4yr_place<span class="token punctuation">`</span></span> <span class="token keyword">as</span> cv
+	<span class="token keyword">ON</span> p<span class="token punctuation">.</span>GEOIDFQ <span class="token operator">=</span> cv<span class="token punctuation">.</span>geoid 
+
+<span class="token comment">-- cvap totals row only</span>
+<span class="token keyword">WHERE</span> cv<span class="token punctuation">.</span>lnnumber <span class="token operator">=</span> <span class="token number">1</span>
+</code></pre>
+<p>This seems correct now, the CVAP counts seem close enough with consistency that I'm not suspicious, I am suspicious though because all my place are showing at or near 100% voter registration rates when compared with the place data even if the MoE is included in the CVAP totals. Ugh. This is 2023, is it possible we had that big of an increase in population + voter registration to make this make sense? Maybe? </p>
+<p>Gonna leave this one alone for a bit and return when I'm less annoyed. Might be time to bother Miriam. I also messaged Hal, who gave me the CVAP data, they said they know why my counts are off and are gonna send me something.</p>
+<p>Jk, not dead yet on this. Gonna see if I can limit to people registered in or before 2023. </p>
+<p>I did a little text here to see if I can narrow my registration date at all since the date format is funky. Gonna pop the where here back into the registered voters CTE above so I can hopefully only count the people who were registered before the beginning of 2024</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
+	<span class="token function">MAX</span><span class="token punctuation">(</span>vb_vf_registration_date<span class="token punctuation">)</span>
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span>
+<span class="token keyword">WHERE</span> vb_vf_registration_date <span class="token operator">&#x3C;</span> <span class="token number">20240000</span>
+</code></pre>
+<p>My registered_voters still look way high compared to the cvap_est, but at least most of them aren't above 100% now? Idk. Now I think I actually have to wait for Hal and/or Miriam.</p>
+<p>Spoke with Hal yesterday. Looks like the voterfile probably has tons of inactive voters in the roll still. Going to try removing them to get a closer count.</p>
+<p>Just ran this to check how big of an impact this might have. It returned a count of 641,481. That seems like enough.</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">SELECT</span>
+	<span class="token function">COUNT</span><span class="token punctuation">(</span>vb_voterbase_registration_status<span class="token punctuation">)</span>
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span>
+
+<span class="token keyword">WHERE</span> vb_voterbase_registration_status <span class="token operator">=</span> <span class="token string">"Unregistered"</span>
+</code></pre>
+<p>I added status and a deceased flag back into my registered_voters CTE</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">WITH</span> registered_voters <span class="token keyword">AS</span><span class="token punctuation">(</span>
+	<span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+		vb_tsmart_place <span class="token keyword">as</span> geoid
+		<span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> registered_voters 
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span>
+	
+	<span class="token keyword">WHERE</span> vb_vf_registration_date <span class="token operator">&#x3C;</span> <span class="token number">20240000</span> <span class="token comment">-- date before 2024</span>
+		<span class="token operator">AND</span> vb_deceased_flag_date_of_death <span class="token operator">is</span> <span class="token boolean">null</span> <span class="token comment">-- not deceased</span>
+		<span class="token operator">AND</span> vb_voterbase_registration_status <span class="token operator">&#x3C;></span> <span class="token string">"Unregistered"</span>
+	
+	<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<p>My results are lower than they have been, but they still seem too high. Gonna take the basic difference between the registered voters and cvap column so I can have something to look at on a map. I'm also going to remove the before 2024 line. I want to know what happened in 2024 and beyond.</p>
+<p><strong>saved as cvap_place</strong></p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.az_unregistered_est<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+	<span class="token keyword">WITH</span> registered_voters <span class="token keyword">AS</span><span class="token punctuation">(</span>
+		<span class="token keyword">SELECT</span> <span class="token keyword">DISTINCT</span>
+			vb_tsmart_place <span class="token keyword">as</span> geoid
+			<span class="token punctuation">,</span><span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> voterbase_id<span class="token punctuation">)</span> <span class="token keyword">AS</span> registered_voters
+		
+		<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.targetsmart_AZ.voter_base_latest<span class="token punctuation">`</span></span>
+		<span class="token keyword">WHERE</span> vb_vf_registration_date <span class="token operator">&#x3C;</span> <span class="token number">20240000</span> <span class="token comment">-- date before 2024</span>
+			<span class="token operator">AND</span> vb_deceased_flag_date_of_death <span class="token operator">is</span> <span class="token boolean">null</span> <span class="token comment">-- not deceased</span>
+			<span class="token operator">AND</span> vb_voterbase_registration_status <span class="token operator">&#x3C;></span> <span class="token string">"Unregistered"</span>
+		
+		<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span>
+	<span class="token punctuation">)</span>
+	
+	<span class="token keyword">SELECT</span>
+	p<span class="token punctuation">.</span><span class="token operator">*</span>
+	<span class="token punctuation">,</span> rv<span class="token punctuation">.</span>registered_voters
+	<span class="token punctuation">,</span> cv<span class="token punctuation">.</span>cvap_est
+	<span class="token punctuation">,</span> cv<span class="token punctuation">.</span>cvap_moe
+	<span class="token punctuation">,</span> <span class="token keyword">CASE</span>
+		<span class="token keyword">WHEN</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">-</span> <span class="token punctuation">(</span>rv<span class="token punctuation">.</span>registered_voters <span class="token operator">/</span> <span class="token punctuation">(</span>cv<span class="token punctuation">.</span>cvap_est <span class="token operator">+</span> cv<span class="token punctuation">.</span>cvap_moe<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&#x3C;</span> <span class="token number">0</span>
+			<span class="token keyword">THEN</span> <span class="token boolean">NULL</span>
+		<span class="token keyword">ELSE</span> <span class="token punctuation">(</span><span class="token number">1</span> <span class="token operator">-</span> <span class="token punctuation">(</span>rv<span class="token punctuation">.</span>registered_voters <span class="token operator">/</span> <span class="token punctuation">(</span>cv<span class="token punctuation">.</span>cvap_est <span class="token operator">+</span> cv<span class="token punctuation">.</span>cvap_moe<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	<span class="token keyword">END</span> <span class="token keyword">AS</span> unregistered_percent
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.census_place_2023_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> p  
+	
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> registered_voters <span class="token keyword">AS</span> rv
+		<span class="token keyword">ON</span> p<span class="token punctuation">.</span>GEOID <span class="token operator">=</span> CAST<span class="token punctuation">(</span>rv<span class="token punctuation">.</span>geoid <span class="token keyword">AS</span> INT64<span class="token punctuation">)</span>
+	
+	<span class="token keyword">INNER</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.cvap_2019_4yr_place<span class="token punctuation">`</span></span> <span class="token keyword">as</span> cv
+		<span class="token keyword">ON</span> p<span class="token punctuation">.</span>GEOIDFQ <span class="token operator">=</span> cv<span class="token punctuation">.</span>geoid
+	
+	<span class="token comment">-- cvap totals row only</span>
+	<span class="token keyword">WHERE</span> cv<span class="token punctuation">.</span>lnnumber <span class="token operator">=</span> <span class="token number">1</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<p>The map honestly seems reasonable so I'm going to move forward with demographic breakdowns.</p>
+<h5 id="email-from-chris-brill-at-targetsmart">Email from Chris Brill at Targetsmart<a aria-hidden="true" class="anchor-heading icon-link" href="#email-from-chris-brill-at-targetsmart"></a></h5>
+<ol>
+<li>Our modeled race categorical variables do not map neatly onto the CVAP race categories from the census. While our models are built using a certain amount of census data, they are not built in order to try to re-create census race categories. </li>
+<li>Because of that- we really don't have any categorical race variables that I would utilize to try to find 'multi-racial' individuals.  </li>
+<li>Our most accurate race model is actually going to be the 'vb.tsmr_race' variable.  If you are able to access vb.voterbase_race than I think you can get to the vb.tsmr_race variable.  </li>
+<li>When I work on projects comparing CVAP race data to our voter file- I tend to restrict that analysis by comparing the CVAP 'alone' categories to the tsmr_race categories- while realizing that I am excluding some percentage of the population.  </li>
+<li>However.. There are also tsmr_race_score variables that one might try to utilize for something like this- these are the raw scores that feed into the tsmr_race categorical variable, so in theory, you could identify people who, for instance, have a higher model score for both white and asian.  </li>
+<li>The rise of the 'multi-racial' category though is very real- but I don't think we've gotten to a place yet where we are attempting to systematically model that at the individual level.</li>
+</ol>
+<p>Here is a sheet with statewide registration + CVAP by county: <a href="https://docs.google.com/spreadsheets/d/14jQsHXcgrbYyz7fyB20qacZ3kWTtbiHu9uJQairxK-Y/edit?gid=1976786004#gid=1976786004">https://docs.google.com/spreadsheets/d/14jQsHXcgrbYyz7fyB20qacZ3kWTtbiHu9uJQairxK-Y/edit?gid=1976786004#gid=1976786004</a></p>
+<ul>
+<li>Current reg % is 61.77%, gonna change my map to display % registered rather than % unregistered</li>
+</ul>
+<p>Updated the case statement to reflect the change above</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token punctuation">,</span> <span class="token keyword">CASE</span> 
+  <span class="token keyword">WHEN</span> <span class="token punctuation">(</span>rv<span class="token punctuation">.</span>registered_voters <span class="token operator">/</span> <span class="token punctuation">(</span>cv<span class="token punctuation">.</span>cvap_est <span class="token operator">+</span> cv<span class="token punctuation">.</span>cvap_moe<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">&#x3C;</span> <span class="token number">0</span> 
+    <span class="token keyword">THEN</span> <span class="token boolean">NULL</span> 
+  <span class="token keyword">ELSE</span> <span class="token punctuation">(</span>rv<span class="token punctuation">.</span>registered_voters <span class="token operator">/</span> <span class="token punctuation">(</span>cv<span class="token punctuation">.</span>cvap_est <span class="token operator">+</span> cv<span class="token punctuation">.</span>cvap_moe<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">END</span> <span class="token keyword">AS</span> unregistered_percent
+</code></pre>

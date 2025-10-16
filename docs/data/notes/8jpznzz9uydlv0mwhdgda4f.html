@@ -1,0 +1,74 @@
+<h1 id="2024-c4-campaign-ids">2024 C4 Campaign Ids<a aria-hidden="true" class="anchor-heading icon-link" href="#2024-c4-campaign-ids"></a></h1>
+<iframe width="600" height="450" src="https://lookerstudio.google.com/embed/reporting/2c90014e-a1a2-4f7e-a06c-2729e118b2e8/page/p_gl68xct6pd" frameborder="0" style="border:0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+<p>Survey responses by county + precinct (pctnum)</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">SELECT</span>
+	mc<span class="token punctuation">.</span>countyname
+	<span class="token punctuation">,</span> mc<span class="token punctuation">.</span>pctnum
+	<span class="token punctuation">,</span> sq<span class="token punctuation">.</span>SurveyQuestionName
+	<span class="token punctuation">,</span> sr<span class="token punctuation">.</span>SurveyResponseName
+	<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>cs<span class="token punctuation">.</span>VanID<span class="token punctuation">)</span> <span class="token keyword">as</span> response_count 
+
+<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_ContactsSurveyResponses_VF<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cs 
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_SurveyQuestions<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> sq
+	<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>SurveyQuestionID <span class="token operator">=</span> sq<span class="token punctuation">.</span>SurveyQuestionID
+
+<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_SurveyResponses<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> sr
+	<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>SurveyResponseID <span class="token operator">=</span> sr<span class="token punctuation">.</span>SurveyResponseID
+
+<span class="token keyword">FULL</span> <span class="token keyword">OUTER</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.modified_c4_precincts_2024<span class="token punctuation">`</span></span> <span class="token keyword">as</span> mc
+	<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>VanID <span class="token operator">=</span> mc<span class="token punctuation">.</span>VanID
+
+<span class="token keyword">WHERE</span> sq<span class="token punctuation">.</span><span class="token keyword">Cycle</span> <span class="token operator">=</span><span class="token string">'2024'</span>
+	<span class="token operator">AND</span> mc<span class="token punctuation">.</span>countyname <span class="token operator">in</span> <span class="token punctuation">(</span><span class="token string">'COCONINO'</span><span class="token punctuation">,</span><span class="token string">'COCHISE'</span><span class="token punctuation">,</span><span class="token string">'MOHAVE'</span><span class="token punctuation">,</span><span class="token string">'PINAL'</span><span class="token punctuation">,</span><span class="token string">'PIMA'</span><span class="token punctuation">,</span><span class="token string">'YAVAPAI'</span><span class="token punctuation">,</span><span class="token string">'YUMA'</span><span class="token punctuation">)</span>
+
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token number">4</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token number">4</span>
+</code></pre>
+<p>create a view and join to geo table</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.sr_by_pctnum_c4_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+
+	<span class="token keyword">WITH</span> a <span class="token keyword">AS</span><span class="token punctuation">(</span>
+		<span class="token keyword">SELECT</span>
+			mc<span class="token punctuation">.</span>pctnum
+			<span class="token punctuation">,</span> sq<span class="token punctuation">.</span>SurveyQuestionName
+			<span class="token punctuation">,</span> sr<span class="token punctuation">.</span>SurveyResponseName
+			<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span>cs<span class="token punctuation">.</span>VanID<span class="token punctuation">)</span> <span class="token keyword">as</span> response_count
+		
+		<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_ContactsSurveyResponses_VF<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cs
+		
+		<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_SurveyQuestions<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> sq
+			<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>SurveyQuestionID <span class="token operator">=</span> sq<span class="token punctuation">.</span>SurveyQuestionID 
+		
+		<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_SurveyResponses<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> sr
+			<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>SurveyResponseID <span class="token operator">=</span> sr<span class="token punctuation">.</span>SurveyResponseID
+		
+		<span class="token keyword">FULL</span> <span class="token keyword">OUTER</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.modified_c4_precincts_2024<span class="token punctuation">`</span></span> <span class="token keyword">as</span> mc
+			<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>VanID <span class="token operator">=</span> mc<span class="token punctuation">.</span>VanID 
+		
+		<span class="token keyword">WHERE</span> sq<span class="token punctuation">.</span><span class="token keyword">Cycle</span> <span class="token operator">=</span><span class="token string">'2024'</span>
+			<span class="token operator">AND</span> mc<span class="token punctuation">.</span>countyname <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'COCONINO'</span><span class="token punctuation">,</span><span class="token string">'COCHISE'</span><span class="token punctuation">,</span><span class="token string">'MOHAVE'</span><span class="token punctuation">,</span><span class="token string">'PINAL'</span><span class="token punctuation">,</span><span class="token string">'PIMA'</span><span class="token punctuation">,</span><span class="token string">'YAVAPAI'</span><span class="token punctuation">,</span><span class="token string">'YUMA'</span><span class="token punctuation">)</span>
+		
+		<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span>
+		<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span>
+	<span class="token punctuation">)</span>  
+	
+	<span class="token keyword">SELECT</span>
+		pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span>
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>COUNTY
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>PRECINCTNA
+	    <span class="token punctuation">,</span> pg<span class="token punctuation">.</span>PCTNUM
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>LEGISLATIV
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>CONGRESSIO
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>SurveyQuestionName
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>SurveyResponseName
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>response_count
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pg
+	
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> a
+		<span class="token keyword">ON</span> pg<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> a<span class="token punctuation">.</span>pctnum
+	  
+	<span class="token keyword">WHERE</span> a<span class="token punctuation">.</span>response_count <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+<span class="token punctuation">)</span>
+</code></pre>

@@ -1,0 +1,126 @@
+<h1 id="modified-precincts-python-script">Modified Precincts Python Script<a aria-hidden="true" class="anchor-heading icon-link" href="#modified-precincts-python-script"></a></h1>
+<p>AZ Precinct names suck, here's a script to fix it</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+
+  
+
+precincts <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'/RAZA_c4_2024_Door_Attempts - bq-results-20250107-174015-1736271644789.csv'</span><span class="token punctuation">)</span>
+
+  
+
+<span class="token comment"># County to prefix dictionary, may consider swapping with FIPS</span>
+
+county_codes <span class="token operator">=</span> <span class="token punctuation">{</span>
+
+<span class="token string">'YUMA'</span><span class="token punctuation">:</span><span class="token string">'YU'</span>
+
+<span class="token punctuation">,</span><span class="token string">'MARICOPA'</span><span class="token punctuation">:</span><span class="token string">'MC'</span>
+
+<span class="token punctuation">,</span><span class="token string">'SANTA CRUZ'</span><span class="token punctuation">:</span><span class="token string">'SC'</span>
+
+<span class="token punctuation">,</span><span class="token string">'GILA'</span><span class="token punctuation">:</span><span class="token string">'GI'</span>
+
+<span class="token punctuation">,</span><span class="token string">'PIMA'</span><span class="token punctuation">:</span><span class="token string">'PM'</span>
+
+<span class="token punctuation">,</span><span class="token string">'PINAL'</span><span class="token punctuation">:</span><span class="token string">'PN'</span>
+
+<span class="token punctuation">,</span><span class="token string">'APACHE'</span><span class="token punctuation">:</span><span class="token string">'AP'</span>
+
+<span class="token punctuation">,</span><span class="token string">'GRAHAM'</span><span class="token punctuation">:</span><span class="token string">'GM'</span>
+
+<span class="token punctuation">,</span><span class="token string">'LA PAZ'</span><span class="token punctuation">:</span><span class="token string">'LP'</span>
+
+<span class="token punctuation">,</span><span class="token string">'MOHAVE'</span><span class="token punctuation">:</span><span class="token string">'MO'</span>
+
+<span class="token punctuation">,</span><span class="token string">'NAVAJO'</span><span class="token punctuation">:</span><span class="token string">'NA'</span>
+
+<span class="token punctuation">,</span><span class="token string">'COCHISE'</span><span class="token punctuation">:</span><span class="token string">'CH'</span>
+
+<span class="token punctuation">,</span><span class="token string">'YAVAPAI'</span><span class="token punctuation">:</span><span class="token string">'YA'</span>
+
+<span class="token punctuation">,</span><span class="token string">'COCONINO'</span><span class="token punctuation">:</span><span class="token string">'CN'</span>
+
+<span class="token punctuation">,</span><span class="token string">'GREENLEE'</span><span class="token punctuation">:</span><span class="token string">'GN'</span>
+
+<span class="token punctuation">}</span>
+
+  
+
+<span class="token comment"># Function to extract pctnum based on county and precinct code</span>
+
+<span class="token keyword">def</span> <span class="token function">extract_pctnum</span><span class="token punctuation">(</span>countyname<span class="token punctuation">,</span> precinctcode<span class="token punctuation">,</span> county_codes<span class="token punctuation">)</span><span class="token punctuation">:</span>
+
+  
+
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+
+precinct_int <span class="token operator">=</span> <span class="token builtin">int</span><span class="token punctuation">(</span><span class="token builtin">float</span><span class="token punctuation">(</span>precinctcode<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment"># Handles cases like 25.0 → 25</span>
+
+<span class="token keyword">except</span> ValueError<span class="token punctuation">:</span>
+
+<span class="token keyword">return</span> <span class="token string">'ERROR'</span>
+
+  
+
+<span class="token comment"># Ensure precinctcode is a string and zero-pad to 4 digits</span>
+
+num_part <span class="token operator">=</span> <span class="token builtin">str</span><span class="token punctuation">(</span>precinct_int<span class="token punctuation">)</span><span class="token punctuation">.</span>zfill<span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span>
+
+  
+
+<span class="token comment"># Get the county code from the dictionary</span>
+
+county_codes <span class="token operator">=</span> county_codes<span class="token punctuation">.</span>get<span class="token punctuation">(</span>countyname<span class="token punctuation">)</span>
+
+  
+
+<span class="token keyword">if</span> county_codes<span class="token punctuation">:</span>
+
+<span class="token keyword">return</span> county_codes <span class="token operator">+</span> num_part <span class="token comment"># Concatenate county code and zero-padded precinct code</span>
+
+<span class="token keyword">else</span><span class="token punctuation">:</span>
+
+<span class="token keyword">return</span> <span class="token string">'ERROR'</span>
+
+  
+  
+
+<span class="token comment">#Apply to dataframe, swap out row['__'] with column names</span>
+
+precincts<span class="token punctuation">[</span><span class="token string">'pctnum'</span><span class="token punctuation">]</span> <span class="token operator">=</span> precincts<span class="token punctuation">.</span><span class="token builtin">apply</span><span class="token punctuation">(</span><span class="token keyword">lambda</span> row<span class="token punctuation">:</span> extract_pctnum<span class="token punctuation">(</span>row<span class="token punctuation">[</span><span class="token string">'countyname'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> row<span class="token punctuation">[</span><span class="token string">'precinctcode'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> county_codes<span class="token punctuation">)</span><span class="token punctuation">,</span> axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+
+  
+
+<span class="token comment">#Export the new dataframe to csv</span>
+
+precincts<span class="token punctuation">.</span>to_csv<span class="token punctuation">(</span><span class="token string">'/content/modified_c4precincts.csv'</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+  
+
+<span class="token comment">#Display head to check result</span>
+
+precincts<span class="token punctuation">.</span>head<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<p>merge files based on pctnum</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+
+df1 <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'Map Files - everything but 2024.csv'</span><span class="token punctuation">)</span>
+df2 <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span><span class="token string">'results_2024_modified_precincts.csv'</span><span class="token punctuation">)</span>
+
+
+pctnum <span class="token operator">=</span> <span class="token string">'pctnum'</span>
+
+merged_df <span class="token operator">=</span> pd<span class="token punctuation">.</span>merge<span class="token punctuation">(</span>df1<span class="token punctuation">,</span> df2<span class="token punctuation">,</span> on<span class="token operator">=</span>pctnum<span class="token punctuation">,</span> how<span class="token operator">=</span><span class="token string">'outer'</span><span class="token punctuation">)</span>
+
+<span class="token comment">#convert any numeric values from strings for qgis</span>
+merged_df <span class="token operator">=</span> merged_df<span class="token punctuation">.</span><span class="token builtin">apply</span><span class="token punctuation">(</span><span class="token keyword">lambda</span> col<span class="token punctuation">:</span> pd<span class="token punctuation">.</span>to_numeric<span class="token punctuation">(</span>col<span class="token punctuation">,</span> errors<span class="token operator">=</span><span class="token string">'ignore'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Replace '%' with 'perc' in all column names</span>
+merged_df<span class="token punctuation">.</span>columns <span class="token operator">=</span> merged_df<span class="token punctuation">.</span>columns<span class="token punctuation">.</span><span class="token builtin">str</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">'%'</span><span class="token punctuation">,</span> <span class="token string">'perc'</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Save the final merged DataFrame to a new CSV file</span>
+merged_df<span class="token punctuation">.</span>to_csv<span class="token punctuation">(</span><span class="token string">'merged_mapfiles_raza.csv'</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>merged_df<span class="token punctuation">.</span>head<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+</code></pre>

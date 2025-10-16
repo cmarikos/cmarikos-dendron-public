@@ -1,0 +1,139 @@
+<h1 id="maps-in-looker---file-conversion-guide">Maps in Looker   File Conversion Guide<a aria-hidden="true" class="anchor-heading icon-link" href="#maps-in-looker---file-conversion-guide"></a></h1>
+<h3 id="step-1">Step 1<a aria-hidden="true" class="anchor-heading icon-link" href="#step-1"></a></h3>
+<p>We're going to use <a href="https://gdal.org/en/stable/">GDAL</a>which is a translator library for geospatial data formats. This will allow us to start with basically any type of geospatial file format, but I'll use shapefiles in this demo. </p>
+<p>We need to create a virtual environment to isolate dependencies.</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % python3 -m venv geoenv
+</code></pre>
+<p>Then we'll activate the virtual environment with the following command</p>
+<pre class="language-zsh"><code class="language-zsh">cmarikos@MacBookAir ~ % source geoenv/bin/activate
+</code></pre>
+<p>We will see the name of our virtual environment in our terminal when this is successfully activated like so</p>
+<pre class="language-zsh"><code class="language-zsh">(geoenv) cmarikos@MacBookAir ~ %
+</code></pre>
+<p>Next</p>
+<pre class="language-zsh"><code class="language-zsh">(geoenv) cmarikos@MacBookAir ~ % pip install GDAL
+</code></pre>
+<h3 id="step-2">Step 2<a aria-hidden="true" class="anchor-heading icon-link" href="#step-2"></a></h3>
+<p>Install GDAL in your virtual environment with the following command</p>
+<pre class="language-zsh"><code class="language-zsh">(geoenv) cmarikos@MacBookAir ~ % pip install gdal
+</code></pre>
+<h3 id="step-3">Step 3<a aria-hidden="true" class="anchor-heading icon-link" href="#step-3"></a></h3>
+<p>Open VS code, or your IDE of choice. Open the folder that corresponds to your virtual environment.</p>
+<p>Activate your virtual environment with this command in the terminal:</p>
+<pre class="language-zsh"><code class="language-zsh">geoenvcmarikos@MacBookAir geoenv % source bin/activate
+</code></pre>
+<p>When it's been successfully activated your terminal will print the following:</p>
+<pre class="language-zsh"><code class="language-zsh">(geoenv) geoenvcmarikos@MacBookAir geoenv % 
+</code></pre>
+<p>Create a file named test_gdal.py and make sure GDAL is installed correctly by writing the following:</p>
+<pre class="language-python"><code class="language-python"><span class="token comment"># print the following error if GDAL is not installed correctly</span>
+<span class="token keyword">try</span><span class="token punctuation">:</span>
+<span class="token keyword">from</span> osgeo <span class="token keyword">import</span> gdal
+<span class="token keyword">except</span> ImportError<span class="token punctuation">:</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Error: GDAL library is not installed or not found in your PYTHONPATH."</span><span class="token punctuation">)</span>
+	exit<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Print the GDAL version information</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"GDAL Version:"</span><span class="token punctuation">,</span> gdal<span class="token punctuation">.</span>VersionInfo<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># List available GDAL drivers</span>
+driver_count <span class="token operator">=</span> gdal<span class="token punctuation">.</span>GetDriverCount<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Number of GDAL Drivers installed:"</span><span class="token punctuation">,</span> driver_count<span class="token punctuation">)</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>driver_count<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	driver <span class="token operator">=</span> gdal<span class="token punctuation">.</span>GetDriver<span class="token punctuation">(</span>i<span class="token punctuation">)</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>i<span class="token punctuation">}</span></span><span class="token string">: </span><span class="token interpolation"><span class="token punctuation">{</span>driver<span class="token punctuation">.</span>ShortName<span class="token punctuation">}</span></span><span class="token string"> - </span><span class="token interpolation"><span class="token punctuation">{</span>driver<span class="token punctuation">.</span>LongName<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="step-4">Step 4<a aria-hidden="true" class="anchor-heading icon-link" href="#step-4"></a></h3>
+<p>Now that our virutal environment is setup and we have GDAL installed correctly, we can convert a shapefile. Add a shapefile to your project folder.</p>
+<p>I'm adding a file called 2024 AZ Voting Precincts v2.shp (I have added the .cpg, .dbf, .prj, .qmd, .shp, and .shx files)</p>
+<p>Now that we have our files in the correct folder we can employ the GDAL shapefile conversion function to create a WKT field in a CSV</p>
+<p>Now in your terminal run the following:</p>
+<pre class="language-zsh"><code class="language-zsh">ogr2ogr -f "CSV" az_precincts.csv "2024 AZ Voting Precincts v2.shp" -lco GEOMETRY=AS_WKT
+</code></pre>
+<p>This will create a CSV file called az_precincts.csv that contains column called WKT with geospatial data that we can upload to BigQuery.</p>
+<h3 id="step-5">Step 5<a aria-hidden="true" class="anchor-heading icon-link" href="#step-5"></a></h3>
+<p>Now that we have our az_precincts.csv we need to upload them to BigQuery. Review how to upload CSV files to BigQuery <a href="https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-csv">in this guide</a>.</p>
+<p>Now that our file is loaded to BigQuery we have to recategorize your WKT data type as Geospatial data. I do this by creating a view with the ST_GEOGFROMTEXT() function applied to my WKT column, there's probably also a way to do this when you are loading the CSV. Refer to the guide above if you want to dig up a solution.</p>
+<h5 id="important-note">Important note<a aria-hidden="true" class="anchor-heading icon-link" href="#important-note"></a></h5>
+<p>Your column containing Geospatial data must be named "GEOMETRY" for Looker to accept it as Geospatial data</p>
+<p>Here is a code sample of my view</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo AS(
+	
+	SELECT
+		ST_GEOGFROMTEXT(WKT) AS GEOMETRY -- you must name it "GEOMETRY" for Looker to categorize it correctly as Geospatial data
+		, COUNTY
+		, PCTNUM --this is a field I have created with a python script so I can have an exact match by precinct since AZ precinct names are inconsistent accross VAN/Voterfiles
+		, PRECINCTNA -- human readable precinct name
+	
+	FROM <span class="token punctuation">`</span></span>prod<span class="token operator">-</span>organize<span class="token operator">-</span>arizon<span class="token operator">-</span><span class="token number">4</span>e1c0a83<span class="token punctuation">.</span>geofiles<span class="token punctuation">.</span>az_precincts<span class="token punctuation">`</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<h5 id="note-on-the-geospatial-data-type-in-bigquery">Note on the geospatial data type in BigQuery<a aria-hidden="true" class="anchor-heading icon-link" href="#note-on-the-geospatial-data-type-in-bigquery"></a></h5>
+<p>Looker doesn't join map data well so we have to join columns we want within BigQuery. There is some weirdness to be aware of. Our GEOMETRY column data type can't be grouped. In order to create map features that utilize aggregation, you'll need to create a CTE then join to the table creating geometry. I'll show my code sample below (my columns are slightly different, since I am working with a different precinct file).</p>
+<pre class="language-sql"><code class="language-SQL"><span class="token keyword">CREATE</span> <span class="token operator">OR</span> <span class="token keyword">REPLACE</span> <span class="token keyword">VIEW</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.sr_by_pctnum_c4_2024<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> <span class="token punctuation">(</span>
+
+	<span class="token keyword">WITH</span> a <span class="token keyword">AS</span><span class="token punctuation">(</span>
+		
+		<span class="token keyword">SELECT</span>
+			mc<span class="token punctuation">.</span>pctnum
+			<span class="token punctuation">,</span> sq<span class="token punctuation">.</span>SurveyQuestionName
+			<span class="token punctuation">,</span> sr<span class="token punctuation">.</span>SurveyResponseName
+			<span class="token punctuation">,</span> <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> cs<span class="token punctuation">.</span>VanID<span class="token punctuation">)</span> <span class="token keyword">as</span> response_count
+		
+		<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_ContactsSurveyResponses_VF<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> cs
+		
+		<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_SurveyQuestions<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> sq
+			<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>SurveyQuestionID <span class="token operator">=</span> sq<span class="token punctuation">.</span>SurveyQuestionID
+		
+		<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.ngpvan.CTARAA_SurveyResponses<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> sr
+			<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>SurveyResponseID <span class="token operator">=</span> sr<span class="token punctuation">.</span>SurveyResponseID
+		
+		  
+		<span class="token keyword">FULL</span> <span class="token keyword">OUTER</span> <span class="token keyword">JOIN</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.rich_christina_proj.modified_c4_precincts_2024<span class="token punctuation">`</span></span> <span class="token keyword">as</span> mc
+			<span class="token keyword">ON</span> cs<span class="token punctuation">.</span>VanID <span class="token operator">=</span> mc<span class="token punctuation">.</span>VanID
+		
+		<span class="token keyword">WHERE</span> sq<span class="token punctuation">.</span><span class="token keyword">Cycle</span> <span class="token operator">=</span><span class="token string">'2024'</span>
+			<span class="token operator">AND</span> mc<span class="token punctuation">.</span>countyname <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'COCONINO'</span><span class="token punctuation">,</span><span class="token string">'COCHISE'</span><span class="token punctuation">,</span><span class="token string">'MOHAVE'</span><span class="token punctuation">,</span><span class="token string">'PINAL'</span><span class="token punctuation">,</span><span class="token string">'PIMA'</span><span class="token punctuation">,</span><span class="token string">'YAVAPAI'</span><span class="token punctuation">,</span><span class="token string">'YUMA'</span><span class="token punctuation">)</span>
+		  
+		
+		<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span>
+		<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">,</span><span class="token number">3</span>
+	<span class="token punctuation">)</span>
+	
+	  
+	
+	<span class="token keyword">SELECT</span>
+		pg<span class="token punctuation">.</span><span class="token keyword">GEOMETRY</span>
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>COUNTY
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>PRECINCTNA
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>LEGISLATIV
+		<span class="token punctuation">,</span> pg<span class="token punctuation">.</span>CONGRESSIO
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>SurveyQuestionName
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>SurveyResponseName
+		<span class="token punctuation">,</span> a<span class="token punctuation">.</span>response_count
+	
+	<span class="token keyword">FROM</span> <span class="token identifier"><span class="token punctuation">`</span>prod-organize-arizon-4e1c0a83.geofiles.az_precincts_geo<span class="token punctuation">`</span></span> <span class="token keyword">AS</span> pg
+	
+	<span class="token keyword">LEFT</span> <span class="token keyword">JOIN</span> a
+		<span class="token keyword">ON</span> pg<span class="token punctuation">.</span>PCTNUM <span class="token operator">=</span> a<span class="token punctuation">.</span>pctnum  
+	
+	<span class="token keyword">WHERE</span> a<span class="token punctuation">.</span>response_count <span class="token operator">IS</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+<span class="token punctuation">)</span>
+</code></pre>
+<h3 id="step-6">Step 6<a aria-hidden="true" class="anchor-heading icon-link" href="#step-6"></a></h3>
+<p>Add your joined precinct file and make sure that your GEOMETRY column is categorized as Geospatial data (with the globe icon). If it is not categorized this way, you cannot manually recategorize it within Looker. Refer to the comment in the first code block on step 5 if you are having issues.</p>
+<p></p><blockquote>
+No note with name Screenshot 2025-02-28 at 11.33.31 AM.png found in cache during parsing.
+</blockquote><p></p>
+<p>Add a chart to your page, and select "Filled Map." When you add it you will get an error at first. Drag your GEOMETRY field to the Geospatial field. The map will still not display. Hover over the "Invalid dimension" error under Fields > Location and click the "x" to remove the warning. </p><blockquote>
+No note with name Screenshot 2025-02-28 at 11.44.46 AM.png found in cache during parsing.
+</blockquote><p></p>
+<p>Once you remove location, your map should appear.
+</p><blockquote>
+No note with name Screenshot 2025-02-28 at 11.46.08 AM.png found in cache during parsing.
+</blockquote><p></p>
+<hr>
+<strong>Backlinks</strong>
+<ul>
+<li><a href="/notes/lk8i0j2mn6ck5iikxkyl14u">Maps in Looker   SQL Samples</a></li>
+</ul>

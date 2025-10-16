@@ -1,0 +1,128 @@
+<h1 id="install--setup">Install + Setup<a aria-hidden="true" class="anchor-heading icon-link" href="#install--setup"></a></h1>
+<h2 id="1-pyspark-in-vs-code-virtual-environment">1. PySpark in VS Code Virtual Environment<a aria-hidden="true" class="anchor-heading icon-link" href="#1-pyspark-in-vs-code-virtual-environment"></a></h2>
+<ol>
+<li>
+<p>Created &#x26; activated a Python venv in VS Code:</p>
+<pre class="language-bash"><code class="language-bash">python3 -m venv ./venv
+<span class="token builtin class-name">source</span> venv/bin/activate
+</code></pre>
+</li>
+<li>
+<p>Installed PySpark into the venv:</p>
+<pre class="language-bash"><code class="language-bash">pip <span class="token function">install</span> pyspark
+</code></pre>
+</li>
+<li>
+<p>Verified import works in a notebook/REPL:</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pyspark
+<span class="token keyword">print</span><span class="token punctuation">(</span>pyspark<span class="token punctuation">.</span>__version__<span class="token punctuation">)</span>
+</code></pre>
+</li>
+</ol>
+<h2 id="2-install--point-to-java">2. Install &#x26; Point to Java<a aria-hidden="true" class="anchor-heading icon-link" href="#2-install--point-to-java"></a></h2>
+<ol>
+<li>
+<p>Installed OpenJDK 17 (via Homebrew).</p>
+</li>
+<li>
+<p>In <code>~/.zshrc</code>, set:</p>
+<pre class="language-zsh"><code class="language-zsh">export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+export PATH="$JAVA_HOME/bin:$PATH"
+</code></pre>
+</li>
+<li>
+<p>Confirmed with:</p>
+<pre class="language-bash"><code class="language-bash">java -version  <span class="token comment"># showed OpenJDK 17.0.14</span>
+</code></pre>
+</li>
+</ol>
+<h2 id="3-download--configure-spark-distribution">3. Download &#x26; Configure Spark Distribution<a aria-hidden="true" class="anchor-heading icon-link" href="#3-download--configure-spark-distribution"></a></h2>
+<ol>
+<li>
+<p>Unpacked Spark 3.5.4 (Hadoop 3) to <code>~/spark-3.5.4-bin-hadoop3</code>.</p>
+</li>
+<li>
+<p>In <code>~/.zshrc</code>, set:</p>
+<pre class="language-zsh"><code class="language-zsh">export SPARK_HOME=~/spark-3.5.4-bin-hadoop3
+export PATH="$SPARK_HOME/bin:$PATH"
+</code></pre>
+</li>
+<li>
+<p>Verified with:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token variable">$SPARK_HOME</span>/bin/pyspark --version
+</code></pre>
+</li>
+</ol>
+<h2 id="4-enable-the-bigquery-connector">4. Enable the BigQuery Connector<a aria-hidden="true" class="anchor-heading icon-link" href="#4-enable-the-bigquery-connector"></a></h2>
+<h3 id="a-via-spark-defaultsconf">A. Via <code>spark-defaults.conf</code><a aria-hidden="true" class="anchor-heading icon-link" href="#a-via-spark-defaultsconf"></a></h3>
+<ol>
+<li>
+<p>Under <code>$SPARK_HOME/conf</code>, created <code>spark-defaults.conf</code> from the <code>.template</code> if needed.</p>
+</li>
+<li>
+<p>Added the line:</p>
+<pre><code>spark.jars.packages com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.32.2
+</code></pre>
+</li>
+<li>
+<p>Launched Spark with verbose output to see the connector download:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token builtin class-name">export</span> <span class="token assign-left variable">SPARK_PRINT_LAUNCH_COMMAND</span><span class="token operator">=</span><span class="token number">1</span>
+<span class="token variable">$SPARK_HOME</span>/bin/pyspark --verbose
+</code></pre>
+</li>
+</ol>
+<h3 id="b-alternate-explicit---packages-on-launch">B. (Alternate) Explicit <code>--packages</code> on Launch<a aria-hidden="true" class="anchor-heading icon-link" href="#b-alternate-explicit---packages-on-launch"></a></h3>
+<ul>
+<li>Direct command:
+<pre class="language-bash"><code class="language-bash"><span class="token variable">$SPARK_HOME</span>/bin/pyspark <span class="token punctuation">\</span>
+  --packages com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.32.2
+</code></pre>
+</li>
+<li>Or add to <code>~/.zshrc</code> as an alias:
+<pre class="language-zsh"><code class="language-zsh">alias pyspark_bq='$SPARK_HOME/bin/pyspark --packages com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.32.2'
+</code></pre>
+</li>
+</ul>
+<h2 id="5-verify-the-connector-is-loaded">5. Verify the Connector Is Loaded<a aria-hidden="true" class="anchor-heading icon-link" href="#5-verify-the-connector-is-loaded"></a></h2>
+<ol>
+<li>
+<p>In your shell, confirm the defaults file is in place:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token function">ls</span> <span class="token variable">$SPARK_HOME</span>/conf/spark-defaults.conf
+<span class="token function">grep</span> spark.jars.packages <span class="token variable">$SPARK_HOME</span>/conf/spark-defaults.conf
+</code></pre>
+</li>
+<li>
+<p>Run <code>pyspark</code> (or <code>pyspark_bq</code>) and watch for Maven download logs:</p>
+<pre><code>:: resolving dependencies ::
+Downloading: …spark-bigquery-with-dependencies_2.12-0.32.2.jar
+</code></pre>
+</li>
+</ol>
+<h2 id="6-test-readwrite-to-bigquery">6. Test Read/Write to BigQuery<a aria-hidden="true" class="anchor-heading icon-link" href="#6-test-readwrite-to-bigquery"></a></h2>
+<ol>
+<li>
+<p>Point at your service account JSON:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token builtin class-name">export</span> <span class="token assign-left variable">GOOGLE_APPLICATION_CREDENTIALS</span><span class="token operator">=</span><span class="token string">"/path/to/key.json"</span>
+</code></pre>
+</li>
+<li>
+<p>In PySpark shell or script:</p>
+<pre class="language-python"><code class="language-python">df <span class="token operator">=</span> spark<span class="token punctuation">.</span>read<span class="token punctuation">.</span><span class="token builtin">format</span><span class="token punctuation">(</span><span class="token string">"bigquery"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">"project"</span><span class="token punctuation">,</span> <span class="token string">"my-gcp-proj"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">"dataset"</span><span class="token punctuation">,</span> <span class="token string">"my_dataset"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">"table"</span><span class="token punctuation">,</span> <span class="token string">"my_table"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>load<span class="token punctuation">(</span><span class="token punctuation">)</span>
+df<span class="token punctuation">.</span>show<span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span>
+
+df<span class="token punctuation">.</span>write<span class="token punctuation">.</span><span class="token builtin">format</span><span class="token punctuation">(</span><span class="token string">"bigquery"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">"table"</span><span class="token punctuation">,</span> <span class="token string">"my-gcp-proj:my_dataset.new_table"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>mode<span class="token punctuation">(</span><span class="token string">"overwrite"</span><span class="token punctuation">)</span> \
+    <span class="token punctuation">.</span>save<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+</li>
+<li>
+<p>Verify in BigQuery console that <code>new_table</code> exists and contains your data.</p>
+</li>
+</ol>
+<hr>
+<p>You can tuck this into your project README or internal wiki to capture exactly what we did. Let me know if you want any tweaks!</p>

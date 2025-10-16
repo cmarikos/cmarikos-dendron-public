@@ -1,0 +1,45 @@
+<h1 id="yef-2025">Yef 2025<a aria-hidden="true" class="anchor-heading icon-link" href="#yef-2025"></a></h1>
+<p>On Thu, Aug 21, 2025 at 8:10 AM Erin Zamora <a href="/mailto:%5Berin@youthengagementfund.org%5D(mailto:erin@youthengagementfund.org)">[erin@youthengagementfund.org](mailto:erin@youthengagementfund.org)</a> wrote:  </p>
+<blockquote>
+<p>Dear Sherri and the Rural Arizona Engagement Team,</p>
+<p>Thank you for the timely submission of your application. The YEF Team appreciates the effort and care that your team is putting into this submission process.</p>
+<p>To ensure your application is processed in a timely manner, please complete the <a href="https://docs.google.com/spreadsheets/d/1-_KKROw2fRfQl93w3h48KviC6K3N4YKLR7Rdd7Ohxns/edit?usp=sharing">Updated Diversity Table</a>. Once updated, please change the date on the document to reflect the new submission date.  </p>
+<p>Our team asks that you keep in mind these instructions as you review the diversity table.  </p>
+<ul>
+<li>
+<p>Please ensure that the totals in each category, gender, race + ethnicity and age are equal to the total number of staff at the top of each column (Row 2, Columns B-H). </p>
+</li>
+<li>
+<p>While we are trying to collect as complete of a dataset as possible, if you don’t have complete data for some of these categories or do not want to disclose, please put those numbers in the No Data/Prefer Not to Disclose row. Including the ‘No Data’ selections, the total in each category should still equate to the total number of staff in Row 2, Columns B-H.</p>
+</li>
+</ul>
+<p>The deadline for edits to the <a href="https://docs.google.com/spreadsheets/d/1-_KKROw2fRfQl93w3h48KviC6K3N4YKLR7Rdd7Ohxns/edit?usp=sharing">Updated Diversity Table</a> is <strong>August 28, 2025 at 5:00 pm PT / 8:00 pm ET.</strong>  </p>
+<p>While the YEF team will be on our annual summer break from August 25-29, Cassandra Stafford will be available to answer any questions you may have about the diversity table. I will return on September 2 to review your submission.   </p>
+<p>Thank you very much in advance and please reach out if you have any questions.</p>
+<p>With gratitude,</p>
+<p>Erin Zamora</p>
+</blockquote>
+<p>YEF 2024 Diversity Table: <a href="https://docs.google.com/document/d/1j_NTZtoUVJAEykwgJvsSBLNdPNc1jYPajXvScOfztEQ/edit?tab=t.0">https://docs.google.com/document/d/1j_NTZtoUVJAEykwgJvsSBLNdPNc1jYPajXvScOfztEQ/edit?tab=t.0</a></p>
+<p>YEF 2025 Application with Narrative: <a href="https://docs.google.com/document/d/1G3qsdUzUAq3nCq9QCeEaYh2bGilkGPRxugXE36837Gw/edit?tab=t.0#heading=h.4j36sw7swjrt">https://docs.google.com/document/d/1G3qsdUzUAq3nCq9QCeEaYh2bGilkGPRxugXE36837Gw/edit?tab=t.0#heading=h.4j36sw7swjrt</a></p>
+<p>YEF Diversity Table: <a href="https://docs.google.com/spreadsheets/d/1-_KKROw2fRfQl93w3h48KviC6K3N4YKLR7Rdd7Ohxns/edit?gid=1663386223#gid=1663386223">https://docs.google.com/spreadsheets/d/1-_KKROw2fRfQl93w3h48KviC6K3N4YKLR7Rdd7Ohxns/edit?gid=1663386223#gid=1663386223</a></p>
+<h3 id="demographic-diversity-table">Demographic Diversity Table<a aria-hidden="true" class="anchor-heading icon-link" href="#demographic-diversity-table"></a></h3>
+<p><a href="https://docs.google.com/spreadsheets/d/1rU69LZuIE63d1zIaTqouxBrhqz51c9mvUhYDyOP8-5Q/edit?gid=1315867243#gid=1315867243">Staff Demographic Form Responses</a></p>
+<p>Filter existing form responses in new tab</p>
+<pre><code>=ARRAYFORMULA(FILTER('Form Responses 1'!1:159,'Form Responses 1'!D:D = "Active",'Form Responses 1'!J:J &#x3C;> "Canvasser"))
+</code></pre>
+<h5 id="use-last-years-yef-edit-me-tab">Use last year's YEF Edit Me! tab<a aria-hidden="true" class="anchor-heading icon-link" href="#use-last-years-yef-edit-me-tab"></a></h5>
+<p>Create a namehelper column with first and last name as a search key</p>
+<pre><code>=CONCAT(E2,F2)
+</code></pre>
+<p>Vlookup using the name helper to autofill previously edited categories, manually update the rest</p>
+<pre><code>=VLOOKUP(A2,'YEF Edit Me!'!D2:K,5,False)
+</code></pre>
+<p>Pull in dob and race (in YEF categories like this, then manually edit blanks)</p>
+<p><a href="https://docs.google.com/spreadsheets/d/1HaktJ7y0eehGYeWU9Cf1nbunPPC6KZYP0mJycZYUcuU/edit?gid=0#gid=0">DOB comes from this sheet</a> which is pulled from Paychex</p>
+<p>Pull age from DOB</p>
+<pre><code>=DATEDIF(C2, TODAY(), "Y")
+</code></pre>
+<p>Create age buckets to match YEF chart</p>
+<pre><code>=IF(B2&#x3C;18,"Under 18",IF(B2&#x3C;=21,"18 - 21",IF(B2&#x3C;=25,"22 - 25",IF(B2&#x3C;=29,"26 - 29",IF(B2&#x3C;=35,"30 - 35",IF(B2&#x3C;=44,"36 - 44","45+"))))))
+</code></pre>
+<p>Have to get Antonio, Lindsay, Bryce, Tara Clayton, and Anne to fill our <a href="https://docs.google.com/forms/d/e/1FAIpQLSeB2u5ZXdfoNzotx2r3iR3dXp5lxL1N0pqyXIK8pU3XbQO4yA/viewform?usp=sf_link">Staff Demo Form</a>. For now I've added them in data not captured.</p>
