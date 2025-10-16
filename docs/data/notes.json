@@ -11,8 +11,8 @@
       "title": "This page has not yet sprouted",
       "schemaStub": false,
       "type": "note",
-      "updated": 1760646751656,
-      "created": 1760646751656,
+      "updated": 1760648319957,
+      "created": 1760648319957,
       "desc": "",
       "links": [],
       "anchors": {},
@@ -40,8 +40,95 @@
       "contentHash": "83ed5144fafbe22a37193c4a402a8a0f",
       "links": [],
       "anchors": {},
-      "children": [],
+      "children": [
+        "iyunl8sbta6dwnz7psbh0zb"
+      ],
       "parent": null,
+      "data": {}
+    },
+    "iyunl8sbta6dwnz7psbh0zb": {
+      "fname": "Public.index",
+      "stub": true,
+      "vault": {
+        "fsPath": ".",
+        "selfContained": true,
+        "name": "Dendron"
+      },
+      "schemaStub": false,
+      "type": "note",
+      "updated": 1760648319875,
+      "created": 1760648319875,
+      "id": "iyunl8sbta6dwnz7psbh0zb",
+      "desc": "",
+      "links": [],
+      "anchors": {},
+      "children": [
+        "kmmvv34raff0kh2xztfd1t6"
+      ],
+      "parent": "yxkfnaxvirvm4cfx78t2sf2",
+      "data": {},
+      "title": "index"
+    },
+    "kmmvv34raff0kh2xztfd1t6": {
+      "id": "kmmvv34raff0kh2xztfd1t6",
+      "title": "index",
+      "desc": "",
+      "updated": 1760648277553,
+      "created": 1760647510759,
+      "custom": {},
+      "fname": "Public.index.md",
+      "type": "note",
+      "vault": {
+        "fsPath": ".",
+        "selfContained": true,
+        "name": "Dendron"
+      },
+      "contentHash": "ed2a03cfb95798dfbf824d7c24c02649",
+      "links": [],
+      "anchors": {
+        "hi-im-christina": {
+          "type": "header",
+          "text": "Hi, I'm Christina",
+          "value": "hi-im-christina",
+          "line": 9,
+          "column": 0,
+          "depth": 1
+        },
+        "reach-me-with-inquiries-at-cgmarikosgmailcom": {
+          "type": "header",
+          "text": "Reach me with inquiries at cgmarikos@gmail.com",
+          "value": "reach-me-with-inquiries-at-cgmarikosgmailcom",
+          "line": 15,
+          "column": 0,
+          "depth": 2
+        },
+        "explore-my-work": {
+          "type": "header",
+          "text": "Explore My Work",
+          "value": "explore-my-work",
+          "line": 18,
+          "column": 0,
+          "depth": 3
+        },
+        "technical-stack---current-most-used-tools-and-languages": {
+          "type": "header",
+          "text": "Technical Stack - Current Most Used Tools and Languages",
+          "value": "technical-stack---current-most-used-tools-and-languages",
+          "line": 26,
+          "column": 0,
+          "depth": 3
+        },
+        "about-this-site": {
+          "type": "header",
+          "text": "About This Site",
+          "value": "about-this-site",
+          "line": 35,
+          "column": 0,
+          "depth": 3
+        }
+      },
+      "children": [],
+      "parent": "iyunl8sbta6dwnz7psbh0zb",
       "data": {}
     }
   },
@@ -66,7 +153,9 @@
       "contentHash": "83ed5144fafbe22a37193c4a402a8a0f",
       "links": [],
       "anchors": {},
-      "children": [],
+      "children": [
+        "iyunl8sbta6dwnz7psbh0zb"
+      ],
       "parent": null,
       "data": {},
       "body": ""
@@ -92,7 +181,9 @@
     "contentHash": "83ed5144fafbe22a37193c4a402a8a0f",
     "links": [],
     "anchors": {},
-    "children": [],
+    "children": [
+      "iyunl8sbta6dwnz7psbh0zb"
+    ],
     "parent": null,
     "data": {},
     "body": ""

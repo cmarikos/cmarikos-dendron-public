@@ -6,13 +6,35 @@
       "icon": null,
       "hasTitleNumberOutlined": false,
       "vaultName": "Dendron",
-      "children": []
+      "children": [
+        {
+          "key": "iyunl8sbta6dwnz7psbh0zb",
+          "title": "index",
+          "icon": "plusOutlined",
+          "hasTitleNumberOutlined": false,
+          "vaultName": "Dendron",
+          "children": [
+            {
+              "key": "kmmvv34raff0kh2xztfd1t6",
+              "title": "index",
+              "icon": null,
+              "hasTitleNumberOutlined": false,
+              "vaultName": "Dendron",
+              "children": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "child2parent": {
-    "yxkfnaxvirvm4cfx78t2sf2": null
+    "yxkfnaxvirvm4cfx78t2sf2": null,
+    "iyunl8sbta6dwnz7psbh0zb": "yxkfnaxvirvm4cfx78t2sf2",
+    "kmmvv34raff0kh2xztfd1t6": "iyunl8sbta6dwnz7psbh0zb"
   },
   "notesLabelById": {
-    "yxkfnaxvirvm4cfx78t2sf2": "Public"
+    "yxkfnaxvirvm4cfx78t2sf2": "Public",
+    "iyunl8sbta6dwnz7psbh0zb": "index",
+    "kmmvv34raff0kh2xztfd1t6": "index"
   }
 }
