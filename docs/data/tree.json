@@ -8,7 +8,7 @@
       "vaultName": "Dendron",
       "children": [
         {
-          "key": "buyijs20porvn5e431gabl1",
+          "key": "8exann7t1regl66fadqrme1",
           "title": "index",
           "icon": "plusOutlined",
           "hasTitleNumberOutlined": false,
@@ -29,12 +29,12 @@
   ],
   "child2parent": {
     "yxkfnaxvirvm4cfx78t2sf2": null,
-    "buyijs20porvn5e431gabl1": "yxkfnaxvirvm4cfx78t2sf2",
-    "kmmvv34raff0kh2xztfd1t6": "buyijs20porvn5e431gabl1"
+    "8exann7t1regl66fadqrme1": "yxkfnaxvirvm4cfx78t2sf2",
+    "kmmvv34raff0kh2xztfd1t6": "8exann7t1regl66fadqrme1"
   },
   "notesLabelById": {
     "yxkfnaxvirvm4cfx78t2sf2": "Public",
-    "buyijs20porvn5e431gabl1": "index",
+    "8exann7t1regl66fadqrme1": "index",
     "kmmvv34raff0kh2xztfd1t6": "index"
   }
 }

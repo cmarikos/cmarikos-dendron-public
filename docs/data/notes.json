@@ -11,8 +11,8 @@
       "title": "This page has not yet sprouted",
       "schemaStub": false,
       "type": "note",
-      "updated": 1760661661122,
-      "created": 1760661661122,
+      "updated": 1760661803786,
+      "created": 1760661803786,
       "desc": "",
       "links": [],
       "anchors": {},
@@ -41,12 +41,12 @@
       "links": [],
       "anchors": {},
       "children": [
-        "buyijs20porvn5e431gabl1"
+        "8exann7t1regl66fadqrme1"
       ],
       "parent": null,
       "data": {}
     },
-    "buyijs20porvn5e431gabl1": {
+    "8exann7t1regl66fadqrme1": {
       "fname": "Public.index",
       "stub": true,
       "vault": {
@@ -56,9 +56,9 @@
       },
       "schemaStub": false,
       "type": "note",
-      "updated": 1760661660990,
-      "created": 1760661660990,
-      "id": "buyijs20porvn5e431gabl1",
+      "updated": 1760661803652,
+      "created": 1760661803652,
+      "id": "8exann7t1regl66fadqrme1",
       "desc": "",
       "links": [],
       "anchors": {},
@@ -128,7 +128,7 @@
         }
       },
       "children": [],
-      "parent": "buyijs20porvn5e431gabl1",
+      "parent": "8exann7t1regl66fadqrme1",
       "data": {}
     }
   },
@@ -154,7 +154,7 @@
       "links": [],
       "anchors": {},
       "children": [
-        "buyijs20porvn5e431gabl1"
+        "8exann7t1regl66fadqrme1"
       ],
       "parent": null,
       "data": {},
@@ -182,7 +182,7 @@
     "links": [],
     "anchors": {},
     "children": [
-      "buyijs20porvn5e431gabl1"
+      "8exann7t1regl66fadqrme1"
     ],
     "parent": null,
     "data": {},
